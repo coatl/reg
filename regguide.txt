@@ -1,0 +1,416 @@
+Note: this document is half skeleton right now. Eventually, I'll
+flesh this out into a more user-accessable description of Reg.
+
+Another note: some of the things described here aren't working yet...
+I'll try to mark such features with a triple-asterisk (***).
+
+I'm going to assume that the reader of this document is well versed in
+regular expressions. Reg is intended to be an expanded type of regular 
+expression language which extends Regexp-like capabilities to data types
+other than String. (For instance, Files and Arrays.) (It can also enhances
+the capabilites for Strings.... eventually, you will be able to use Reg as
+a full-fleged lexing tool. For information on parsing, see parser.txt and 
+calc.reg.)
+
+matchers and matching:
+Matcher is my term for any Object that can respond to ===. In practice this is
+almost all objects, since by default === forwards to == which is built in. 
+Sometimes, I use the term matcher as shorthand for what might be more properly
+called an 'interesting matcher': one which responds to === in a different way 
+than ==. Of the built-in classes, objects of type Class, (and Module, its parent),
+Regexp, and Range are interesting matchers. Reg extends these, and provides a 
+whole host of other interesting matchers, in the usual sense as well. This 
+includes matchers composed of other (usually smaller) matchers, and a mini-
+language for composing the matchers. 
+
+Much of the mini-language, (a sugary layer, which makes writing matches somewhat
+naturalistic) is in the module Reg::Reg. Reg::Reg can extend user-created 
+(interesting) matchers (giving them |, &, ^, ~, as well as +, -, * and others which 
+I haven't explained yet) in somewhat the same manner that Enumerable extends 
+each and Comparable extends <=>. 
+
+Matching means using a matcher. Typically, this would mean calling the matcher's
+=== method. Eventually, a whole bunch of other matching methods will be provided 
+too, but for now === is the only published match operator.
+
+
+
+
+
+
+#reg actually returns a new matcher that responds to the various operators;
+the original object is unchanged.
+Note: in many contexts, it's not even necessary to use #reg. The right 
+side of a |,&,or ^ (where the left is already known to be a reg) need not
+be made into a reg, so long as it responds to ===. Likewise with the items
+inside Reg::Arrays and Reg::Subseqs, and the keys and values of 
+Reg::Hashes and Reg::Objects need not be regs, so long as they can respond 
+to ===. Examples:
+
+unr=some_unreggy_matcher
+unr.reg|String  #.reg only needed on first
++[ unr, -[unr, String]+0 ] #no .reg req'd w/ elems of Reg::Array/Reg::Subseq
++{ unr=>unr }              #                         or Reg::Hash
+-{ unr=>unr }              #                         or Reg::Object
+
+Reg::Reg is mixed into the following built-in classes by default: Module,Class, Range, Regexp.
+Class Set is extended to have an ===, but Reg::Reg is not used in it (yet).
+
+
+
+
+regexp has just 4 constructs that create scalar expressions:
+   .   [st]   [^st]   s
+all others regexp constructs are for creating regexp vectors.
+regexp scalars do not exist by themselves; they are merely subexpressions of a
+larger regexp.
+
+
+
+
+reg scalars
+reg has a rich array of matchers for different types of ruby objects. there are
+specialized matchers for arrays, hashs, strings, symbols, and others, as well as
+the object matcher, suitable for use with just about any ruby object, user-
+created or otherwise. ordinary objects can also serve as reg scalars; it will 
+match (normally) if == succeeds. actually, === is used internally, but it just
+delegates to == by default. 
+
+objects that can respond to === (which is most, since by default it delegates to ==) can also serve as a scalar Reg; this is a nice capability for creating user-defined reg types. Among other
+things, it means that most objects can serve as 'literal' Reg matchers that match only themselves.
+(Note that if you want to use methods of Reg, such as Reg::Reg#*, on such 'literal' reg scalars, you'll have to invoke the reg method of the user-defined object. for instance, this won't work:
+  :foo*5 #error, no Symbol#*
+but this will:
+  :foo.reg*5 #creates a wrapper Reg that forwards === to the wrapped object
+)
+
+reg vectors (will be met in full later)
+subsequence(-[]) and iteration (*,+,-) are always vectors.
+logic operators (~, &, |, ^) become vectors if any subexpression is a vector
+(recursively).
+array matchers(+[]) are NOT vectors (but, all vectors must ultimately be
+contained in them)
+certain other, more dynamic reg types (Reg::Variable,Reg::Constant,Reg::Proc) might
+be able to be vectors if that feature is enabled by the user.
+
+
+Reg by example:
+I will use fragments of Reg to illustrate the various aspects of the language. We'll start with various
+scalar matchers, followed by some vector matchers later on.
+
+  /foo/   #everybody knows what this matches, right?
+
+You didn't know that a Regexp is also a Reg, did you? (*** Actually, Regexp serves a double role. When matching String-like data, it's matches a variable number of characters. When matching Array-like data, it matches a single item in the Array.)
+
+Logic:
+(The &, |, ^, and ~ operators in the next few examples can apply to any Reg. Regexp is used for demonstration purposes because it is the only type of Reg so far introduced.)
+
+  ~/foo/      #matches on strings without foo (_and_ all non-Strings)
+
+Not expressions (negations) invert their operand. This expression matches things that don't match /foo/. Note that that normally includes all non-String objects as well as String objects that don't match the Regexp.
+
+I'm overriding the default meaning of Regexp#~ here. The original is still available as Regexp#cmp. 
+
+  /foo/|/bar/        #roughly like /(?>foo)|(?>bar)/: strings with either /foo/ or /bar/
+
+Or expressions (alternations) match if any of the alternatives match. The current treatment of alternation is charitably described as 'traditional' and 'non-greedy'. Alternatives are given the opportunity to match in the order that was specified in the or matcher. The amount consumed by the overall match is the amount of input matched by the first (leftmost) alternative which actually matches (within the larger expression). 
+
+(***This is not necessarily the longest that the overall expression can match. A future implementation may be greedier overall. Currently, if the first (tentative) match leads to the overall expression failing, the first matching branch is consulted for shorter matches before later alternatives which might be as long as (or longer than) the current match are attempted.)
+
+(I've used the (?>) construct to demonstrate a subtle point about the use of Regexp in larger Reg expressions: there's no way to backtrack into a nested Regexp when backtracking through the larger Reg. Whatever the Regexp is able to first match is all it 
+can match; shorter matches cannot be considered. Mostly this is a consideration with sequences and subsequences when matching String-like data, which isn't supported yet.)
+
+  /foo/&/bar/       #sorta like /foo.*bar|bar.*foo/: strings with both /foo/ and /bar/
+
+And expressions (conjunctions) match if all of the sub-expressions match. The amount consumed by the overall expression is the largest amount consumed by the longest alternative(s). 
+
+(*** Backtracking in & expressions is only sketchily understood and not implemented yet. The total number of ways a conjunction can match rises exponentionally with the number of the branches which are actually ambiguous for the current input. The compromise 
+implementation I would like to do does not enumerate all of these (very numerous) matches... instead, all possible overall lengths will be tried, at least. )
+
+  /foo/^/bar/          #vaguely like /foo|bar/&~(/foo/&/bar/): strings with /foo/ or /bar/ but not both
+  /foo/^/bar/^/baz/      #string matching one and only one of /foo/, /bar/, or /baz/
+
+Xor expressions (exclusive alternations) match if one and only one of the branches actually matches. If there are only two branches, this is equivalent to matching if one branch matches and the other doesn't. 
+The amount consumed overall is the amound consumed by the only branch that matches.
+
+Note that any of the three binary boolean operations can have more than two branches, as in the second example above. In the case of xor, the meaning of more than two branches is not necessarily obvious, but it is consistant: one and only one of the branches must match.
+
+
+Matching symbols:
+
+  /dd/.sym
+
+This examples matches Symbols that contain two consecutive d's. The Reg::Symbol matcher permits all the capabilities of Regexps when matching Symbols, only with slightly longer syntax. Regexp#sym returns a Reg::Symbol that matches Symbols that the Regexp 
+would match if they were converted to strings.
+
+
+
+
+ItemThat:
+
+  /foo/|item_that.has_attr?
+
+Lest you thought that only Strings can be matched, I've introduced a new type: Reg::ItemThat. This example matches Strings with 'foo' in them or Objects that respond to :has_attr? with a true value. Kernel#item_that returns a Reg::ItemThat, which is a rel
+ative of Jim Weirich's Deferred class. Deferred objects respond to all methods with another Deferred object. The method(s) are not actually called, but saved up (with args) until a future time when they're all invoked at once. Almost all methods create an
+other Deferred operation in this way, except a magic method that performs all the deferred operations. Since ItemThat is what I call a matcher, the magic method is ===. 
+
+  item_that.meth.another_meth(@args)==$something
+
+This demonstrates some of the concepts of the last paragraph: deferred calls to item_that can be chained together. The above expression returns a matcher for items that respond to :meth, with an object that responds to another_meth, taking @args, and retu
+rning a value equal to $something. This illustrates calling methods on item_that, chaining the calls, methods taking arguments, and even deferring overridable operators.
+
+  item_that<44
+
+This is another example of deferring an operator. This creates a matcher that returns
+true if compared to objects less than 44. 
+
+  (item_that<44) & (item_that%2==0) #even numbers smaller than 44
+
+Here we've got two item_that in one expression. &,|,and~ can substitute for &&, ||, and ! in deferred (and non-deferred) boolean expressions. If you do that, be careful that the operands are really boolean (true, false, or nil). And be aware that it's no 
+longer a short-circuit operator.
+
+I am using & because && is not overrideable. (& has the same meaning for booleans as &&, but isn't a short-circuit operator.) Note that parentheses are now necessary because of the inconveniently different precedence of &. 
+
+ItemThat is not a Reg. ItemThat expressions that use +, -, *, ~, etc in them will get a deferred operator rather than the Reg meaning. Use reg_that (or #reg on an item_that expression) to make them capable of using the reg operators and methods.
+
+  item_that.deferred(:===, 'foo')
+
+If you absolutely had to defer ===, or anything else, use the #deferred method. For the few
+methods that ItemThat actually implements, deferred provides a way to 'escape' the method call.
+
+  item_is(Integer)<44
+
+item_is is an alias for item_that. Either version can take a Module (well actually, scalar matcher) parameter which imposes an additional constraint to the query. (The parameter makes more sense with item_is, however.) In this case, the constraint is that
+  
+the item value must also be an integer, so the whole expression will match any integer less than 44.
+
+  item_that{|x| (some_complicated_expression).has_property? x }
+
+This illustrates the block form of item_that. Block item_that should be used where deferred-style queries
+break down. (In a past version of reg, the block form was the only one available, and it was called proceq instead of item_that.) The block is consulted to see whether a given item matches. If the block returns false or nil or raises an exception, the mat
+ch fails. All other values indicate success. This form of item_that still returns a Deferred relative, meaning that most methods of the result will create a Deferred object, which behaves in the usual way. When the Deferred object is ultimately used to ma
+tch, the block in the center of it is executed first, and it's result is passed through the chain of deferred methods attached to it, in (more or less) the order they were given in the source:
+
+  item_that{|x| y.z(x).w-x }.zero?|item_that.perfect?
+  
+
+
+tbd: item_that gotchas
+! != && || assignment
+the methods it does know, which must be escaped by .deferred(:sym,... if you want that:
+=== coerce deferred __id__ __send__ extend mixmod reg inspect formula_value initialize eval_args
+
+Hash matchers:
+
+  +{/foo/=>/bar/, /baz/=>/boff/|nil}   or   +[/foo/**/bar/, /baz/**(/boff/|nil)]
+
+This is a hash matcher, which can match some patterns within hashes. Two forms are given, and they
+actually have slightly different meanings, which I will explain in a moment. A hash matcher is a set of filters applied to key,value pairs in the hash. Each pair has to be matched by some filter, else the entire hash matcher fails. An expression like: /foo/=>/bar/ is a filter, which matches items with a key that matches /foo/ and value that matches /bar/. The above two hash matchers should match these hashes:
+
+    {"bazzx"=>"boffo the clown", "fool"=>"barfly" }     {"cat food"=>"barf"}
+
+but not these:
+   
+    {"bazzx"=>"bof"} {"fool"=>"barfly", "quux"=>"zork}  {} {"foo"=>"boff"} {"baz"=>"bar"}
+    
+Each pair in the hash matched against must match some filter in the hash matcher. Also, each filter of the
+hash matcher must match something in the hash (or be able to match the default value).
+
+Hashes are unordered data structures. With the first form (+{a=>b}), the +@ operator is applied to a hash value, so order of filters is not preseved. I interpret this to mean that the user wants Reg to determine an appropriate order in which to attempt filters. Reg attempts to assign a sensible order to filters in an unordered hash matcher according to the following rules, based on categorization of the key matchers:
+  first, keys of uninteresting matchers and Reg::Equal (and decendants).
+  then, keys of regs and other interesting matchers
+  then, key of OB  (the catchall)
+
+Within the second category, order is still unspecified. (So don't depend on order.)
+
+Explicit order of filters may be needed in some cases, to assign greater priority to certain filters. That's what ordered matchers (the 2nd form, +[a**b]) is for. The order of filters is respected in ordered hash matchers. The first filter is given a chance to match first, followed by the second and so forth. Within ordered matchers, ** should be understood as a stand-in for =>. Note that unlike =>, ** is unfortunately very high precedence, so its arguments must be surrounded by () if they have operators in them... for
+ instance:
+
+   +[:a ** /b/|/c/]  #eventually causes error... parsed like +[(:a**/b/)|/c/]
+   
+
+   +[:a ** (/b/|/c/)]  #right way
+
+
+Empty hashes are matched only by matchers that can have an OB rule that matches the hashes default value. (Or by
++{}, which matches all Hashes.)
+
+
+Here's a more complicated hash matcher, demonstrating that both key and value can be arbitrarily complicated expressions. This would match hashes where all the keys are symbols containing 'whatnot', and the values are strings containing 'what' or ('have' 
+and 'you'):
+  +{/whatnot/.sym => /what/|/have/&/you/}
+
+Every item in a Hash must be accounted for by one of the rules in the matcher, else the match fails. (To disable this behavior, add this filter to your matcher: OB=>OB.)
+
+
+Object matchers:
+
+  -{:@attr => /something/}   (*** or    -[:@attr ** /something/] )
+  
+An object matcher looks like a hash matcher, except you use - instead of +. Object matching is viewed as a special
+case of hash matching, where the keys (of the object, not the matcher) are constrained to be symbols. In the matcher, the keys must match Symbols (or else they are irrelevant). 
+The symbol may denote an instance, class, or constant variable. (So, the above example shows the most
+common of these, the instance variable.) The symbol may also (if lowercase) represent a property (method) to be
+called. The keys of an object matcher must match symbols ( or arrays starting with symbols). The following are
+equivalent:
+
+  -{:method => (40..50)}
+  item_that{|x| (40..50)===x.method }
+  item_that.method.in?(40..50)       #if Object#in?(Enumerable) (from the facets gem) exists
+
+*** If the key of an object matcher is an array beginning with a symbol (hereafter, a symbol array), the symbol denotes the method to be called, and the remaining elements denote the parameters to be passed to it. In this parameter list, most things will be passed through to the method unchanged. These will not: Backreferences 
+will be resolved. RegProc objects will be called at match-time (with the match progress...) Literal objects will
+be unwrapped, and then used as-is, so that literal backreference or RegProc objects (or whatever) can be passed in when necessary.
+
+
+  -{[:method,:arg1,:arg2,:arg3] => /agent 99/}
+
+
+(or.... maybe it could just be item_that, instead.) ***
+
+I use the term property here, because one must excercise caution when calling methods in matchers this way. The general problem is one of side effects in matchers, which should be avoided. You can also make trouble for yourself with side effects in item_that expressions and probably other ways I haven't thought of. The result will probably not be what you expect. Do not call methods (using either form, or any other way) within matchers that cause changes of state, in either the current object or elsewhere. If you do, you may well see your side effect runs many more times, and against many more objects, than you wanted it to. There are language-approved ways to cause side effects at (or really, after) match time: substitutions, later, side_effect and undo, even backref name binding can be viewed as a type of side effect.
+
+*** As in the hash matcher, the key of an object matcher can be a Reg, allowing you to match patterns in variable or method names. (I will attempt to make matchers or Strings work just like matchers of Symbols do here...)
+
+Unlike a Hash matcher, Object matchers do not have to account for every element. *** If you want to force every
+instance variable to be accounted for, use a rule like this: OB=>None. (Note: OB is interpreted as /^@[^@]/ here.)
+
+differences between ordered and unordered object matchers:
+As with the hash matchers, an implicit order is assigned to filters in unordered object matchers, whereas the order specified in an ordered matcher is strictly respected.
+
+
+
+
+
+
+Matching arrays:
+  +[/foo/,/bar/,/baz/]
+
+This matches arrays containing exactly 3 (string) items. The first contain 'foo', the second 'bar', and the
+third 'baz'. 
+
+A Reg::Array looks exactly like a normal array literal, except with the + in front. It provides an Array matcher with capabilities similar to what Regexp provides for String. Each element of the Reg::Array represents one or more (or maybe less!) items in the array to be matched. Normal scalar matchers, (like all those we have met thus far) always match just one array item. 
+
+scalar and vector matchers (and variable)
+reg can operate on sequences of objects in a way similar to the way that regexp
+operates on a sequence of characters. each operates on sequences of items, where
+in one case the items are objects and in the other characters.
+
+both regexp and reg provide constructs for matching just a single item (scalar
+subexpressions) as well as matching multiple items (vector subexpressions). in
+Regexp, a vector is a String and a scalar is a single character. in Reg, a vector
+is an Array, and a scalar is any item that can be put into an Array (therefore,
+any Object).
+
+Vector matchers _don't_ have an === method. Instead, the mmatch 
+method matches data in a vector. Mmatch takes extra/different parameters to allow
+more information to be made available to the matching method than === allows. The 
+calling conventions of mmatch are still changing; mmatch is at the moment considered 
+an 'internal' method, which shouldn't be used by users. In the future, this
+interface will be published, to give users more options in creating and using 
+matchers.
+
+(Vector matchers may be subdivided into multiple and variable varieties. Multiple 
+matchers are those that match a known number of items if they match at all. Variable
+matchers might match any of a number of lengths.)
+
+Confusingly, a Reg::Array is still a _scalar_ matcher. It matches a single item (of
+type Array). The contents of the Reg::Array are a vector expression, which match the 
+contents of the Array. Reg::Array matches the entire Array contents. Unlike Regexp,
+Reg::Array is effectively anchored on both ends to the underlying array. If you want
+unanchored-like behavior, that can be simulated by putting OBS at both ends. (For
+maximum Regexp-likeness, the first must really be OBS.l, the lazy form.) 
+
+
+
+Repetitons:
+
+OB  #matches any single object
+OBS
+
++[/bar/-1]
++[/bar/.-]
+
++[/bar/+1]
++[/bar/.+]
+
++[/bar/+6]
+
++[/bar/*6]
+
+the unary suffix forms of +,-,*
+
+
+
++[/bar/*(6..17)]
+
++[ -[/bar/,/baz/]+5 ]
+
+
+
+backtracking:
+
++[Integer+1, Fixnum]
+
+
+
+Subsequences:
+
++[  -[/bar/,/baz/] | -[/foo/,(1..10).reg*5] | :zork  ]
+
++[ (-[/bar/,/baz/] & -[/bif/,/baf/,/bof/])*4 ]  #parens needed because of low precedence of &
+
+(un)Anchors:
+
++[OBS, -[/bar/,/baz/]+5, OBS]
+
+The individual members of a Reg::Array (or Reg::Subseq) can be any type of Reg. Scalars always 
+match just one item. Vectors match a variable number of items. The two can be intermixed in
+any combination needed within a sequence or subsequence.
++[(3..10).reg*5, -[:foo, /bar/-5]|/foof/, -{:foo=>item_that>66}, 14..88 ]
+
+
+more topics:
+
+backreferences ***
+
+named backreferences ***
+
+substitutions ***
+
+
+named subexpressions
+
+Reg::var and recursive matching
+
+dynamic creation of reg subexpressions
+
+actions in the middle of a match (later, side_effect and undo) ***
+
+sep and splitter
+
+literals
+
+:AND,:OR,:XOR ***
+
+lookahead and negative lookahead ***
+
+lookback ***
+
+laziness          (  (reg1+1).l  ) ***
+
+lexing ***
+
+parsing => see parser.txt, calc.reg ***
+
+the medium and long reg literal names syntaxes 
+
+avoiding sugar (and why you would want to)
+
+Reg::Progress
+
+MatchSets and next_match
+
+depth-mostly matches ***
+
+IntegerSet ***

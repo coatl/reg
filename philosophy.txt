@@ -1,0 +1,72 @@
+
+
+That's a long story, and well worth telling. 
+
+A long time ago, I wanted a better regexp than regexp. My search ended 
+ when I found an extremely obscure language called gema (the 
+ general-purpose matcher). I'm guessing that I'm the only person to ever 
+ take gema seriously. For a time, I became the worlds foremost expert on 
+ gema. Gema is designed around the idea that all computation can be 
+ modeled as pattern and replacement. Everything in gema is pattern and 
+ replacement... essentially everything is done with regexps. I was 
+ fascinated with the idea. This seemed to me to be a much better model 
+ for most programming problems, which typically involve reading input, 
+ tranforming it in some way, and writing it out again. Conventional 
+ languages (starting with fortran, and including ruby) are based around 
+ the idea of a program being a long string of formulas. This is great 
+ for math-heavy stuff, but most programming is really about data 
+ manipulation, not math. 
+
+But there was trouble in paradise. Gema was wonderful, but weird. The 
+ syntax was cranky. The author had issued one version long ago then 
+ disappeared. Gema code was hard to read, in part because 
+ everythingwasalljammedtogether . 
+ Ifyouinsertspacestomakeitmorer eadable,itchangesthesemanticso fyourprogram. 
+ There were strange problems that I never tracked down or fully 
+ characterized. The only data-type was the string. You had to be an 
+ expert at avoiding the invisible pitfalls of the language to get 
+ anywhere. But I did get surprisingly far. I managed to coax gema into 
+ becoming a true parser, and parsing a toy language. 
+ I wanted to write a compiler in gema. Yes, the whole compiler. And 
+ parsing the toy language was already straining its capabilites. It 
+ wasn't the data model; I actually figured out how to model all other 
+ data types using strings. A match-and-replace language is actually much 
+ better suited to most compiler tasks than an algol-like formula 
+ language. 
+
+Eventually, I abandoned gema, determined to recreate it's glory in a 
+ cleaner form. It was at about this time that I discovered ruby. The 
+ successor to gema was ruma, the ruby matcher. Ruma would be basically 
+ just like gema, but without the problems. Whitespace allowed between 
+ tokens. Proper quotation mechanisms, including nested quotes. And the 
+ language used in the actions (replacements) would be full ruby, instead 
+ of gema's inadequate and crude action language. 
+
+Ruma got maybe halfway done... quite a ways, really. As part of ruma, I 
+ needed a ruby lexer to make sense of the actions. This turned out to be 
+ quite a lot harder than I had anticipated; I'm still working on that 
+ lexer. 
+
+After grinding away at the lexer for a while, dreaming of ruma in the 
+ meantime, I had a brainstorm. Ruma, like gema, was to be a string-based 
+ language. It only operated on strings. In gema, that was just fine 
+ because everything was strings and you just had to live with that. But 
+ ruby has all these other types, a real type system. Wouldn't it be nice 
+ to have those sophisticated search capabilites for other types too? 
+ Well, since I proved to myself that all data types can be converted to 
+ strings, why not convert the ruby data into strings and then match that 
+ in ruma. Of course, it would be so much nicer to just do the matching 
+ on the data in it's original form.... 
+
+The breakthrough came when I realized how malleable ruby really is. I 
+ had become accustomed to c, which I still love, but in so many ways 
+ it's so much more limited. I didn't really have to write my own parser 
+ and lexer; ruby could do it all for me. I just had to override a bunch 
+ of operators. 
+
+After that, it was simple. All I do is override the right operators, 
+ and ruby does the parsing and hands me the match expressions in 
+ already-parsed form. Reg is amazingly small in the end. Most of the 
+ effort and code went into the array matcher, but at least as much 
+ functionality is to be had from the hash and object matchers, which 
+ were trivial. 

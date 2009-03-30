@@ -1,0 +1,450 @@
+Reg is a library for pattern matching in ruby data structures. Reg provides 
+Regexp-like match and match-and-replace for all data structures (particularly
+Arrays, Objects, and Hashes), not just Strings.  
+
+Reg is best thought of in analogy to regular expressions; Regexps are special
+data structures for matching Strings; Regs are special data structures for
+matching ANY type of ruby data (Strings included, using Regexps). 
+
+If you have any questions, comments, problems, new feature requests, or just
+want to figure out how to make it work for what you need to do, contact me: 
+       reg _at_ inforadical _dot_ net
+
+Reg is a RubyForge project. RubyForge is another good place to send your
+bug reports or whatever:  http://rubyforge.org/projects/reg/
+
+
+
+
+The implementation:
+The engine (according to what I can tell from Friedl's book,
+_Mastering_Regular_Expressions_,) is a traditional DFA with non-greedy 
+alternation. For performance, I'd like to move to a more NFA-oriented 
+approach (trying many different alternatives in parallel).
+
+Status: 
+The only real (public) matching operator implemented thus far is:
+Reg::Reg#=== (and descendants). It doesn't return a normalized boolean;
+it will return a false value on no match or a true val if there was a match
+but beyond that, nothing is guaranteed.
+
+A number of important features are unimplemented at this point, most notably 
+backreferences and substitutions. 
+
+The backtracking engine appears to be completely functional now. Vector 
+Reg::And doesn't work.
+
+This release should be much faster, for 2 reasons. First, the cursor library
+has been dropped in favor of sequence, which is much faster. Second, and more
+important, the interpreted backtracking engine has been replaced with a 
+compiled engine. This means completely new implementations of Reg::Array and
+all the vector matchers. (I tried to write compilers for Reg::Hash and Reg::
+Object, but they didn't get completed...) The majority of my concerns about 
+performance are now resolved, although the backtracking algorithm is still
+very simplistic, and could do with a good dose of fixed match cognizance. 
+
+This table compares syntax of Reg and Regexp for various constructs.  Keep
+in mind that all Regs are ordinary ruby expressions. The special syntax 
+is acheived by overriding ruby operators.
+
+In the following examples,
+re,re1,re2 represent arbitrary regexp subexpressions,
+r,r1,r2 represent arbitrary reg subexpressions
+s,t represent any single character (perhaps appropriately escaped, if the char is magical)
+
+reg           regexp               reg class       #description
+
++[r1,r2,r3]   /re1re2re3/          Reg::Array      #sequence
+-[r1,r2]      (re1re2)             Reg::Subseq     #subsequence
+r.lit         \re                  Reg::Literal    #escaping a magical
+regproc{r}    #{re}                (not really named) #dynamic inclusion
+r1|r2 or :OR  (re1|re2) or [st]    Reg::Or         #alternation
+~r            [^s]                 Reg::Not        #negation (for scalar r and s)
+r.*           re*                  Reg::Repeat     #zero or more matches
+r.+           re+                  Reg::Repeat     #one or more matches
+r.-           re?                  Reg::Repeat     #zero or one matches
+r*n           re{n}                Reg::Repeat     #exactly n matches
+r*(n..m)      re{n,m}              Reg::Repeat     #at least n, at most m matches
+r-n           re{n,}               Reg::Repeat     #at most n matches
+r+m           re{,m}               Reg::Repeat     #at least m matches
+OB            .                    Reg::Any        #a single item
+OBS           .*                   Reg::AnyMultiple #zero or more items
+BR(1,2)       \1,\2                Reg::Backref    #backreference   ***
+r>>x or sub   sub,gsub             Reg::Transform  #search and replace   ***
+:a<<r         ()                   Reg::Bound      #capture into a backreference  ***
+
+here are features of reg that don't have an equivalent in regexp
+r.la                  Reg::Lookahead      #lookahead ***
+~-[]                  Reg::Lookahead      #subsequence negation w/lookahead ***
+& or :AND             Reg::And            #all alternatives match
+^ or :XOR             Reg::Xor            #exactly one of alternatives matches
++{r1=>r2}             Reg::Hash           #hash matcher
+-{name=>r}            Reg::Object         #object matcher
+obj.reg               Reg::Fixed          #turn any ruby object into a reg that matches if obj.=== succeeds
+/re/.sym              Reg::Symbol         #a symbol regex
+item_that{|x|rcode}   Reg::ItemThat       #a proc{} that responds to === by invoking the proc's call
+OBS as un-anchor      Reg::AnyMultiple    #opposite of ^ and $ when placed at edges of a reg array (kinda cheesy)
+name=r                (just a var assign) #named subexpressions
+Reg::var              Reg::Variable       #recursive matches via Reg::Variable & Reg::Constants
+Reg::const            Reg::Constant    
+
+
+*** = not implemented yet.
+
+  "... the effect of drinking a Pan Galactic Gargle Blaster is like having
+  your brains smashed out by a slice of lemon wrapped round a large gold
+  brick." 
+     -- Douglas Adams, _Hitchhiker's_Guide_to_the_Galaxy_
+
+Reg is kind of hard to bend your brain around, so here are some examples:
+
+0.4.6 examples:
+
+Matches a single item whose method 'length' returns a Fixnum:
+  item_that.length.is_a? Fixnum
+
+There's a new way to match hashes; it looks more-or-less like the old way and
+behaves a little differently. The old type of hash matcher (now called an 
+unordered hash matcher) looked like:
+
+  +{/fo+/=>8, /ba+r/=>9}
+  
+The new syntax uses +[] instead of +{} and ** instead of =>. It's called an
+ordered hash matcher. The order of filter pairs given in an ordered matcher
+is the order comparisons are done in. The same is not true within unordered
+matchers, where order is inferred from the nature of the key matchers. The 
+ordered equivalent of the last example is:
+
+  +[/fo+/**8, /ba+r/**9]
+  
+Both match hashes whose keys match /fo+/ with value of 8 or match /ba+r/ with
+value of 9 (and nothing else). But if the data looks like:  {"foobar"=>8}, 
+then it is guaranteed to match the second (because /fo+/ is always given a 
+chance first), but might or might not match the first (because the order is
+unspecified).
+
+Here's an example of a Reg::Knows matcher, which matches objects that have the
+#slice method:
+  -:slice
+
+0.4.5 examples:
+
+Matches array containing exactly 2 elements; 1st is another array, 2nd is
+integer:
++[Array,Integer]
+
+Like above, but 1st is array of arrays of symbol
++[+[+[Symbol+0]+0],Integer]
+
+Matches array of at least 3 consecutive symbols and nothing else:
++[Symbol+3]
+
+Matches array with at least 3 symbols in it somewhere:
++[OBS, Symbol+3, OBS]
+
+Matches array of at most 6 strings starting with 'g'
++[/^g/-6]    #no .reg necessary for regexp
+
+Matches array of between 5 and 9 hashes containing a key :k pointing to
+something non-nil:
++[ +{:k=>~nil.reg}*(5..9) ]
+
+Matches an object with Integer instance variable @k and property (ie method)
+foobar that returns a string with 'baz' somewhere in it:
+-{:@k=>Integer, :foobar=>/baz/}
+
+Matches array of 6 hashes with 6 as a value of every key, followed by
+18 objects with an attribute @s which is a String:
++[ +{OB=>6}*6, -{:@s=>String}*18 ]
+
+
+
+Api changes since 0.4.5:
+Reg::Hash semantics have been changing recently.... Reg::Object may be changed 
+to suit.
+
+Api changes since 0.4.0:
+Reg() makes Reg::Arrays now, not hash matchers; use Rah to make hashes. 
+Array#reg and Hash#reg no longer return a Reg::Array or Reg::Hash. In fact 
+the names of most classes have changed; they've been moved into the Reg 
+namespace (aka module). The previous Reg module is now named Reg::Reg. The 
+other names have changed in the obvious way. RegArray is now Reg::Array, etc.
+For the most part these changes don't affect users (if any) because they 
+leave the shortest representation (the mini-language) unaffected. The one
+exception (where you have to refer to a reg module name) is the name of the
+module Reg, which is now Reg::Reg. If anyone has 'include Reg' in their
+class or module to get all of Reg's yummy operators, look out it's changed
+to 'include Reg::Reg' instead. Aliases are mostly provided from the new to the
+old class names... but an alias from Reg to Reg::Reg obviously creates
+a conflict.
+
+
+
+the api (mostly unimplemented):
+r represents a reg
+t represents a transform
+o represents any object
+a represents an array
+s represents a string
+h represents a hash
+scan represents the entire stringscanner interface...
+-(scan,skip,match?,check and their unanchored and backward forms)
+c represents a ::Sequence
+! implies in-place modification
+
+r===o     #v
+r=~o      #v
+ach=~r   #v-
+r.match o #result contains changes
+r.match! o    
+coah.sub!(r[,t])  
+coah.gsub!(r[,t])
+oah.sub(r[,t]) #modifies in result
+oah.gsub(r[,t]) #modifies in result
+a.scan(r)   #modifies in result
+
+c.index/rindex r  #no modify
+c.slice r   #no modify
+c.slice! r  #deletes matching elems
+c.split r   #no modify
+c.find_all r  #like String#scan
+c.find r
+ho.find_all [r-key,] r-value 
+ho.find [r-key,] r-value
+
+ho.index r
+a.split r
+s.find_all r
+s.find r
+s.delete r
+s.delete! r
+s.delete_all r
+s.delete_all! r
+
+#these require wrapping library methods to also take different args
+ac.slice r
+ahoc.slice! r
+o=~r
+oahc[r]
+oahc[r]=t
+c.scan(r)
+a.find_all r
+a.find r
+
+#i'd like to have these, but they can't safely be wrapped, 
+#so i'll have to think of different names.
+as.index/rindex r     #=> offset/roffset ...use exist?/existback? instead
+s.slice r             #=> rslice
+s.slice! r            
+s.split r             #=> rsplit
+s[r]           #=> s-[r]
+s[r]=t         #=> s-[r,t]
+s.sub(r[,t])   #=> rsub
+s.gsub(r[,t])  #=> grsub
+s.sub!(r[,t])  #etc
+s.gsub!(r[,t])
+s.scan(r)      #=> rscan... note scan only conflicts; the rest of the stringscanner interface 
+               #            can be unchanged.
+
+#maybe stuff from Enumerable?
+
+Reg::Progress work list:
+
+phase 1: array only
+v fill out backtrack
+v import asserts from backtrace=>backtrack
+v disable backtrace
+backtrack should respect update_di
+v callers of backtrace must use a progress instead
+v call backtrack on progress instead of backtrace...
+v matchsets unmodified as yet (ok, except repeat and subseq matchsets)
+v push_match and push_matchset need to be called in right places in Reg::Array (what else?)
+note which parts of regarray.rb have been obsoleted by regprogress.rb
+
+phase 2:
+eventually, MatchSet#next_match will take a cursor parameter, and return a number of items consumed or progress or nil
+x entering some types of subreg creates a subprogress
+arrange for process_deferreds to be called in the right places
+create Reg::Bound (for vars) and Reg::SideEffect, Reg::Undo, Reg::Eventually with sugar
+-Reg#bind, Reg#side_effect, Reg#undo, Reg#eventually
+-and of course Reg::Transform and Reg::Replace
+-Reg::Reg#>>(Reg::Replace) makes a Transform, and certain things can mix in module Replace
+create Reg::BackRef
+should Reg::BackRef be a module?
+should Reg::BackRef be a Deferred?
+Reg::Transform calls Reg::Progress#eventually?
+implicit progress needs to be made when doing standalone compare of
+-Reg::Object, Reg::Hash, Reg::Array, Reg::logicals, Reg::Bound, Reg::Transform, maybe others
+
+these are stubbed at least now:
+Backtrace.clean_result and Backtrace.check_result should operate on progresses instead
+v need Reg::Progress#bt_match,last_next_match,to_result,check_result,clean_result
+x need Reg::Progress#deep_copy for use in repeat and subseq matchsets
+need MatchSet#clean_result which delegates to the internal Progress, if any
+v rewrite repeat and subseq to use progress internally? (in progress only...)
+v Reg::(and,repeat,subseq,array) require progress help
+
+
+varieties of Reg::Replace:
+Reg::Backref and Reg::Bound
+Reg::RepProc
+Reg::ItemThat
+Reg::Fixed
+Object (as if Reg::Fixed)
+Reg::Array and Reg::Subseq?
+Array (as if Reg::Array)
+Reg::Transform?
+
+
+
+
+
+not implemented yet:
+Reg::Anchor? (or more efficient unanchor?)
+Reg::Backref should be multiple if the items it backreferences to were multiple
+Reg::NumberSet
+
+
+There are a few optimizations implemented currently, but none of them are
+particularly significant. Some things will probably be quite slow.
+All of the optimizations Friedl lists for regular expressions are pertinant to
+Regs as well. Hopefully, someday, they will be implemented. For the record, they
+are:
+first item discrimination (special case of match cognizance)
+fixed-sequence check
+simple repetition (some is implemented)
+fixed qualifier reduction (??)
+length cognizance
+match cognizance
+need cognizance
+anchors (edge cognizance)
+
+
+
+todo:
+    v move position_stack into Progress::Context
+    v move matchfail_todo into Progress::Context
+    v move matchset_stack into context
+    v all matchsets should reference a Progress 
+    v all matchsets should reference a Context (except maybe SingleMatch_MatchSet?)
+    v MatchSet constructors must take a progress
+    matchset#next_match's should use @progress/@context instead of passed in arr/start
+    v replace subprogress calls with newcontext/endcontext
+    v newcontext/endcontext needs to be used in other contexts too! (Reg::Array, Reg::Object, etc)
+    v need to backtrack in nexted Reg::Array
+    when backup_stacks is called (maybe indirectly) in a MatchSet's #next_match, should it affect the
+    -@progress or the @context of that MatchSet? 
+    inspect all uses of position_stack and position_inc_stack for similar problems
+    
+    
+why isn't ArrayGraphPoint ever used? it should be.
+=== sometimes can raise an exception! (eg: ("r".."s")===[])
+-make sure all calls to === are protected by appending 'rescue false' to them.
+vector Reg::Proc,Reg::ItemThat,Reg::Block,Reg::Variable,Reg::Constant
+convert mmatch_full to mmatch in another class (or module) in logicals, subseq, repeat, etc?
+performance
+variable binding
+variable tracking... keeping each value assigned to a variable during the match in an array
+compare string or file to Reg::Array (lexing)
+rename Reg::Multiple to Reg::Vector
+v rename proceq to item_that (& change conventions... item_that will return a CallLater)
+?implement Object#[](Reg::Reg) and Object#[]=(Reg::Reg, Reg::Replacement)
+in-place substitutions should not be performed when Reg::Reg#=== or Reg::Reg#match called
+-only when Array#sub  or Array#[]=(Reg::Reg,Reg::Replacement)
+perhaps Reg::Reg#match! does substitutions...
+substitutions are applied to result of Array#[], but orig is not modified
+v what about =~?
+v research Txl and BURGs
+more/better docs
+expand user-level documentation
+document operator, three-letter, and long version of everything
+need an interface for returning a partial match if partial input given
+array matcher should match array-like things like enum or (especially) two-way enum (cursor!)
+How should Reg::Array match cursors?
+arguments (including backref's) in property matchers
+discontinuous number sets (and reg multipliers for them)
+v? lookahead (including negated regmultiples)
+lookback
+laziness
+inspect (mostly implemented... but maybe needs another name)
+fix all the warnings
+document sep and splitter
+rdoc output on rubyforge
+other docs on rubyforge
+v borrow jim weirich's deferred
+need interface to get all possible matches
+alias +@ to reg in ItemThatLike? 
+x reg-nature needs be infectious in ItemThat
+v or have a reg_that constructor like item_that, which makes an item_that extended by reg?
+v reg::hash must not descend from ::hash
+depth-mostly matches via ++[/pathkey/**/pathval/,...]
+need a way to constrain the types of matcher that are allowed 
+-in a particular Reg::Array and (some of) its children
+-eg in lex mode, String|Regexp|Integer|:to_s[]|OB|OBS
+-   in type mode, Class|Module|Reg::Knows|nil|true|false|OB|OBS
+-   in depth-mostly mode, Reg::Pair|Symbol|Symbol::WithArgs|Integer|Reg::Reg
+-   in ordered hash mode, Reg::Pair|Symbol|Reg::Reg|String
+-   in ordered obj mode,  Reg::Pair|Symbol|Symbol::WithArgs
+-Subseq, Not, And, Or, Xor, and the like are allowed in all modes if conforming to the same restrictions
+Pair and Knows::WithArgs need constraint parameterization this way too.
+v what is the meaning of :meth[]?    no parameters  for parameterlessness, use +:meth 
+all reg classes and matchers need to implement #==, #eql?, and #hash
+-defaults only check object ids, so for instance, currently:      +[] != +[]
+Reg::Array should be renamed Reg::Sequence  (or something...) it's not just for arrays anymore...
+when extending existing classes, check for func names already existing and chain to them 
+-(or just abort if the wrong ones are defined.)
+v conflict in Set#&,|,^,+,-
+allow expressions like this in hash and object matchers: +{:foo=>/bar/.-} to mean that the
+-value is optional, but if non-default, must match /bar/.
+v potentially confusing name conflict: const vs Const   (in regsugar.rb vs regdeferred.rb)
+sugar is too complicated. need to split into many small files in their own 
+-directory, ala the nano gem. (makes set piracy easier too.)
+add methods to Module/Class to declare which methods are safe/dangerous
+-then allow only safe methods to be called via item_that/Reg::Object, etc.
+add lots more instrumentation
+remove weird eee stuff in regitem_that.rb
+need an object matcher that takes positional instead of named parameters...
+-more succinct, but slightly more limited than the current form.
+I need ArrayMatchSet (like SubseqMatchSet), Hash/ObjectMatchSet (like AndMatchSet)
+-each of these will have to keep track of how many other matchsets were pushed on
+-the stack while they were being matched.
+AndMatchSet still needs a lot of work.
+need vector analogs to the scalar matchers item_that and reg_that, called items_that and regs_that
+
+
+infectious modules:
+Multiple      infects every container except Array (not allowed in Hash,Object,RestrictHash,Case)
+Undoable      infects every container (implies HasCmatch or HasBmatch)
+HasCmatch     infects every Multiple container (& infects non-Multiple with HasBmatch)
+HasBmatch     infects every container (unless HasCmatch also present)
+HasCmatch_And_Bound  infects every container  (&infects with HasCmatch too)
+
+
+
+
+known bugs:
+no backreferences
+no substitutions
+v vector & and ^ wont work
+explicit duck-typing (on mmatch) is used to distinguish regs and literals... should be is_a? Reg::Reg instead.
+0*Infinity should at least cause a warning
+some test cases are so slow as to be effectively unusable.
+
+
+
+    reg - the ruby extended grammar
+    Copyright (C) 2005  Caleb Clausen
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA

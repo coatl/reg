@@ -1,0 +1,820 @@
+Reg (Ruby Extended Grammar) is a language I've been working on for some
+time. Some of the different ways I have described it are: 
+  + A pattern matching language
+  + An interpreter interpreter
+  + A parser tool in the interpretive style
+  + A declarative programming language
+  + A general purpose regular expression engine
+
+Of all these, I most prefer 'pattern matching language'. It seems to best
+convey how I think of it. 
+
+Ruby already has Regexp for matching patterns in Strings. Reg complements
+that capability by providing pattern matching for other types of data,
+such as Arrays, Hashes, and Objects. 
+
+But let me explain what I mean by that in more detail.  What is a pattern?
+Ruby is an object-oriented language. So, clearly, a pattern in Ruby should
+be an object. Pattern objects represent predicates or yes-no questions
+about an as-yet unseen other object.  What is matching? Matching, then, is
+asking the pattern if it 'looks like' that other object. You ask by
+calling a method. And that method is #===. 
+
+#=== is my favorite Ruby operator. The task of building Reg has largely
+been one of creating different types of pattern classes (classes that
+implement === in some interesting way). 
+
+Now, these are not design patterns that I'm talking about. These aren't
+patterns from the Gang of Four book. These are patterns in the sense that
+Regexp is a pattern. I'll also use another word, 'matcher'; it also means
+pattern. 
+
+Interesting matchers
+Before talking about some of the patterns that I have created, let's look
+at the pattern classes that already exist in Ruby. Each of these
+implements #=== in a different way: 
+
+<table 1 -- matcher classes provided by Ruby itself>
+class  | returns true iff the rhs of ===:
+=======+===========================================
+Regexp | matches the Regexp
+Class  | is an instance of that Class 
+Module | is an instance of that Module
+Range  | is within the Range
+Object | is exactly equal to the Object (uninteresting)
+Set    | is a member of the Set (or is equal to a member) 
+</table>
+
+(Actually, Set requires a little help... the current release of Reg does this:
+<listing 1 -- Making Set a matcher>
+class Set
+alias === include?
+end
+</listing>
+
+But the next release will make Set a matcher in a trickier way, which does
+not interfere with the standard definition of Set#===.)
+
+I define 'interesting matcher' to mean one that implements ===.
+An uninteresting matcher is a matcher which implements === the same as ==.
+This is the definition inheirited from Object. Most objects in ruby are
+uninteresting matchers. However, this is an important property; it means
+that most ordinary objects can be used in Reg in contexts that expect a
+full matcher. They represent themselves, or other objects exactly equal to
+themselves. This is similar to Regexp, where 
+most characters can be used to
+represent just themselves. 
+
+[[implementation extracts are simplified to keep exposition uncluttered]]
+
+The ancestor for most of the matchers in Reg is the module Reg::Reg . (The
+name (with a repeated Reg) is somewhat unfortunate and may change.) The
+Reg::Reg module extends pattern classes (classes that implement #===) with
+useful operators for combining and composing bigger, more complicated
+patterns. Several existing Ruby pattern classes are re-opened to include
+Reg::Reg:  Regexp Range Module Class Set.
+
+Reg::Reg has the following operators, among others:
+<table 2 -- some common Reg operators>
+operator  | meaning
+==========+===========================
+   &      | and
+   |      | or
+   ^      | xor (one and only one)
+   ~      | not
+   *,+,-  | repeated / optional match
+   **     | create a pair
+</table>
+
+These operators allow you to compose patterns into larger patterns. 
+I want to be really clear about this.
+The above operators (among others) are added to
+Ruby's existing pattern classes Regexp, Range, Class, Module, and Set.
+(In the case of Set, some of those
+operators are already defined, so 'added' is not quite accurate. However, be assured that the existing semantics of Set#+, for instance, are left unchanged when the right operand is an Enumerable.)
+Ruby 2 selector namespaces should allow Reg to make use of these operators
+without creating a conflict with other libraries which may have defined
+them in a different way.
+
+If anyone objects to Reg re-opening these core classes, please let me know. (So far, no one has objected.)
+
+Atomic patterns
+Ruby's few built-in pattern classes are what I call atomic patterns; they
+contain no other patterns within themselves. The simplest types of
+patterns provided by Reg are also atomic.  Let's briefly discuss the
+semantics and implementation of three: OB, the method check pattern, and
+item_that. 
+
+<table 3 -- OB, the universal matcher>
+expression   |    what it matches     |  expr===x equivalent to:
+=============+========================+==========================
+OB           |   everything           |  Object===x  (or true)
+</table 3>
+
+OB matches anything; any single item. As such, it is equivalent to the
+(built-in) pattern Object, just shorter. The simplest implementation of OB
+is: 
+
+<listing 2 -- OB>
+  OB=Object
+</listing>
+
+<table 4 -- the method check matcher>
+expression |   matches objects that...   |  expr===x equivalent to:
+===========+=============================+===========================
+-:foo      | respond to the named method |  x.respond_to? :foo
+</table 4>
+
+Method check patterns match items that respond to the method named by the
+symbol. For instance, -:reverse would match everything that respond_to?
+the method #reverse. All strings and arrays would match that pattern, but
+no hashes or symbols. 
+
+Let's see how it's implemented:
+<listing 3 -- Reg::Knows, the method check matcher>
+class Symbol
+  def -@; Reg::Knows.new(self) end
+end
+
+module Reg
+  class Knows
+    def initialize(sym)
+       @sym=sym
+    end
+    def ===(other)
+      other.respond_to? @sym
+    end
+  end
+end
+</listing>
+
+Unary minus on symbol creates a wrapper object around the symbol which
+calls #respond_to? on that symbol when === on it is called. (I wanted to
+use unary plus for this feature originally, but there seems to be a bug in
+ruby that prevents that.)
+
+I'm not going to say a lot about item_that, other than it allows you to
+write natural-sounding expressions like these, which do pretty much what
+they seem like they should:
+
+<table 5 -- item_that>
+expression            |    matches objects...            | expr===x 
+                      |                                  | equivalent to:
+======================+==================================+===============
+item_that.has_prop?   | ...whose #has_prop? returns true | x.has_prop?
+item_that<40          | ...less than 40                  | x<40
+item_that.is_valid?   | ...whose #is_valid? returns true | x.is_valid?
+item_that.num_cols<55 | #...with property num_cols < 55  | x.num_cols<55
+</table>
+
+#item_that returns an object that, for (almost) any method called on it,
+saves the receiver, name of the method called, and arguments, and block
+given in the call, returning all in another item_that-like object. 
+ 
+Think of it as saving up the name, and parameters (including the block and
+receiver) of every method called on it in the dot-pipeline following the
+item_that.  The saved up methods get called when === is eventually called
+on the built-up item_that-like expression. 
+
+item_that is made possible by some method_missing magic that just a little
+too long to list here.  Those who are interested should look at Jim
+Weirich's Deferred class, on which item_that is based, which he explains
+in this blog posting: 
+http://onestepback.org/index.cgi/Tech/Ruby/SlowingDownCalculations.rdoc
+
+Standalone item_that is a little pointless... 'item_that<40===x' is both longer and less clear than simply saying 'x<40'. 
+We will find that it is useful when incorporated into larger patterns.
+
+Beware of Side Effects!
+
+Reg has several constructs (most notably replacement expressions) that
+permit you to embed side effects into query expressions; some of these
+will be introduced later. Users are strongly encouraged to use these
+approved mechanisms instead of putting side effects into item_that or
+other types of query expression that should not be making changes to the
+data they are querying.  Since the language can understand that (eg)
+replacement expressions have side effects, it can safely handle those side
+effects, saving them up til the end of the entire match attempt, to ensure
+they are executed only once. If you do put side effects into something
+like item_that, you may find that those side effects are executed many
+more times than you thought they should be. 
+
+For example, 'item_that.chop!'
+is a really bad idea. The chop! will modify the item being queried (if it
+is a String, which has a destructive chop!). As a standalone expression,
+this might work ok, but if you put it inside a Reg::Array (which does
+backtracking) you may quickly get into trouble without understanding why.
+In general, query expressions should not modify their data, so the
+presence of any method ending in a ! should be an indication of possible
+danger. 
+
+Now lets look at some ways to combine Reg patterns together.
+
+Logicals: and, or, xor, not
+
+<table 6 -- the logical operators>
+expression    |    what it matches       |  expression===x 
+              |                          |  equivalent to:
+==============+==========================+================
+File |\       | Files, and strings with  | File===x or
+ /a+/ |\      | 1 or more 'a' and        |  /a+/===x or 
+ (1..5)       | numbers between 1 and 5  |   (1..5)===x            
+--------------+--------------------------+-------------
+/fo+/ &\      | strings that have: foo,  | /fo+/===x and
+ /ba*[rz]/ &\ | bar/baz, and quux        |  /ba*[rz]/ and
+ /quu?x/      | (w/ # of vowels varying) |  /quu?x/
+--------------+--------------------------+-------------
+/^if/ ^\      | strings containing       | [/^if/===x, %r{/x}===x,
+  %r{/x} ^\   |  1 and only 1 of:        |  /rescue/===x
+  /rescue/    |  if, rescue, or '/x'     | ].select{|b| b}.size==1
+--------------+--------------------------+-------------
+~/66/         | all strings w/o '66', +  | !(/66/===x)
+              | all non-strings as well  |
+</table>
+
+The | operator takes 2 sub-patterns as its operands and returns a larger
+pattern that will match everything which matches either sub-pattern. 
+
+The & operator takes 2 sub-patterns as its operands and returns a larger
+pattern that will match everything which matches both sub-patterns. 
+
+The ^ operator takes 2 sub-patterns as its operands and returns a larger
+pattern that will match everything that matches one but not both of the sub-patterns. When ^ operations are chained together (like this: a^b^c^d^e^f), the entire expression matches if one and only one alternative matches.
+
+Note: Regexp#~ is RE-DEFINED. The original semantics of Regexp#~ (as
+documented in Pickaxe) are completely destroyed. ~/66/ matches all strings
+without '66' in them (as well as all non- strings), rather than comparing
+the Regexp /66/ to the default variable, $_. 
+
+(Unfortunately, there are some nasty bugs 
+in the current release of Reg (0.4.5)
+that affect the & and | operators; 
+if the data being matched is nil or
+false, | will always fail, even 
+in cases where it shouldn't. And & doesn't work at all. The next release will fix these.)
+
+<listing 4 -- implementation of logical operators>
+module Reg
+  module Reg
+     def |(other)
+       ::Reg::Or.new(self,other)
+     end
+   end
+ 
+   class Or
+     def initialize(left,right)
+       @left,@right=left,right
+     end
+     def ===(other)
+       @left===other || @right===other
+     end
+   end
+ end
+</listing>
+
+This pattern should be familiar; it is similar to the implementation of
+the method check matcher, Reg::Knows above. 
+
+Logical operators return a wrapper object around their arguments, which
+implements ===. Keep in mind that this is a simplified version of the
+implementation; the real version has more optimizations, handles
+backtracking, allows sub-expressions to contain side effects, and to match
+more than just a single item. 
+
+(De)Composition
+
+Even with the syntax introduced so far, it is possible to create long and
+complicated expressions which are hard to follow. Here's an example. 
+
+<example 1 -- a complicated matcher>
+-:foo|-:bar|(-:baz&-:quux) | (item_that.count%2).zero? === x
+</example>
+
+The usual way to deal with this problem is to allow the programmer to
+break up long expressions into more digestible chunks, each of which is
+given a (hopefully meaningful) name. We might break up the above
+expression like this:... 
+
+<example 2 -- a complicated matcher, broken down>
+knows_foo_or_bar = -:foo|-:bar
+knows_baz_and_quux = -:baz&-:quux
+knows_my_methods = knows_foo_or_bar | knows_baz_and_quux
+
+count_even = (item_that.count%2).zero? 
+
+knows_my_methods | count_even === x
+</example>
+
+Note that I didn't have to write any enabling code. These are just normal
+variable assignments. One of the really great things about of creating a
+DSL or mini-language within ruby itself by defining methods; you get a lot
+of 'core language' features for free! It would have been necessary to
+invent it if this feature did not exist. 
+
+Data models and matcher models
+
+Let's talk about the data model of everyone's favorite language, Perl:
+Scalars are numbers and strings.
+Vectors are lists of scalars.
+Hashes are associations (or maps) of scalars to scalars.
+Objects are special hashes whose keys are always strings.
+
+The same is more or less true of Ruby as well. Ruby makes Object the
+central concept; all scalars, vectors, and hashes are different types of
+Object. Scalars, in this model (and in Perl as well) are extended to
+include references to any Object. (This allows us to create lists of
+lists, etc.)
+
+This is a useful conceptual tool, but a rough model only; some of these
+'data types' are actually more than one data type. 
+
+Reg provides multiple scalar, hash, and object matchers, but only one
+array matcher. However, the array matcher is the only one able to contain
+the various vector matchers. A vector matcher is a matcher that might
+match more (or less) than one item in sequence. 
+
+The hash matcher
+
+<example 3 -- Hash matcher>
++{:foo=>:bar,              
+  1=>/flux/,                 
+  -:times=>"zork",         
+  /^[rs]/=>item_that.reverse, 
+  OB=>Integer                 
+}                        
+     
+#equivalent to:
+ x[:foo]==:bar and /flux/===x[1] and 
+ (x.keys-[:foo,1]).each{|k| 
+  k.respond_to?(:times) and 
+    x[k]=="zork"||break or
+  /^[rs]/===k and 
+    x[k].reverse||break or
+  Integer===x[k]
+ } rescue false
+
+#Matches:
+{ :foo=>:bar,   1=>"flux cap",   3=>"zork",   
+ "rat"=>"long string",   String=>4**99 }
+
+#Doesn't match:
+{ :foo=>:bar,   1=>"flux",    2=>"zork",   "r"=>"a string", 
+ :rest=>3**99,   <red>:fibble=>:foomp</red> }
+{:foo=><red>:baz</red>,   1=>"flux",    2=>"zork",  
+ "r"=>"a string",  :rest=>3**99}
+{:foo=>:bar,   2=>"zork",   "r"=>"a  string",   :rest=>3**99
+ <red>#no entry with key 1</red>
+}
+</example>
+
+In the examples of non-matching objects above, the part of the object
+that caused the match to fail is colored red.
+
+Hash#+@ (unary plus) turns any hash into a Reg::Hash. All keys and values
+in a Reg::Hash are interpreted as matchers. Each key-value pair acts like
+a filter on potential matching hashes. Every key-value pair in the data
+must match some key-value filter in the hash matcher. Furthermore, each
+filter in the hash matcher must have matched something in the hash being
+tested. 
+
+The filters are prioritized into 3 groups based on the 
+type of key matcher. Each key-value pair in the data is 
+tried against the filters in the matcher in the following order.
+First, filters with uninteresting key matchers (those that match only themselves) are tried.
+Then filters with interesting key matchers are tried.
+Finally, the catchall (with a key matcher of OB) is given a final chance
+to match.
+
+Filters are mandatory; if a filter is present in the matcher, it must match something in the data. 
+You can, however, make a filter optional by appending '|nil' to the value
+matcher. (Assuming the default for the hash being tested is nil.)
+(Unfortunately, the bug in the | operator which prevents it from ever matching nil prevents you from being able to make filters optional this way.)
+
+The object matcher
+
+Just as in the data model, objects behave much like hashes (with instance
+variable/attribute names being the keys) object matchers behave much like
+hash matchers.  Matchers may be used on the key side of the filters, but
+since object 'keys' are always strings (names of instance variables and
+methods), the key matchers must match strings... usually they are strings
+or regular expressions. Symbols in object key matchers are auto-converted
+into strings. Unlike the hash matcher, every key (instance var/attribute
+name) in the object to be matched does not have to be accounted for.
+However, every filter in the object must match something. 
+
+Currently, any methods called must take an empty parameter list.
+Once again: beware of side effects when calling methods. 
+
+<example 4 -- an object matcher>
+-{:f=>1,   /^[gh]+$/=>3..4,   :@v=>/=[a-z]+$/}
+
+#Given:
+class Example
+  attr_reader *%w{f g h v}
+  def initialize(f,g,h,v)
+    @f,@g,@h,@v=f,g,h,v
+  end
+end
+
+#Matches:
+Example.new(1,3,4,"foo=bar")
+Example.new(1,4,3,"foo=bar")
+
+#Doesn't match:
+Example.new(<red>2</red>,3,4,"foo=bar")
+Example.new(1,<red>33</red>,4,"foo=bar")
+Example.new(1,3,<red>44</red>,"foo=bar")
+Example.new(1,3,4,<red>"foo=BAR"</red>)
+</example>
+
+
+Sequence matching -- Regexp and Reg 
+
+So far, all the patterns I've presented match exactly one item at a time.
+Let's meet the matchers that can match more (or less) that one item at
+once. The most important of these is Reg::Array, which matches a sequence
+of ruby objects in an array much like Regexp matches a sequence of
+characters in a string. 
+
+[[maybe this table should be moved up nearer the top??]]
+<table 7 -- regex-reg equivalence table>
+Description        | Regexp  | Reg       |
+===================+=========+===========+
+sequence           | /re/    | +[r]      |
+subsequence        | (re)    | -[r]      |
+hash matcher       | n/a     | +{r1=>r2} |
+object matcher     | n/a     | -{r1=>r2} |
+literal            | \re     | r.lit     |
+dynamic inclusion  | #{re}   | regproc{r}| 
+alternation (or)   | re1|re2 | r1|r2     |
+conjunction (and)  | n/a     | r1&r2     |
+xor                | n/a     | r1^r2     |
+negation           | [^re]   | ~r        |
+any number of      | re*     | r.*       |
+at least 1         | re+     | r.+       |
+optional           | re?     | r.-       |
+exactly n of       | re{n}   | r*n       |
+n to m of          | re{n,m} | r*(n..m)  |
+at most n of       | re{n,}  | r-n       |
+at least m of      | re{,m}  | r+m       | 
+1 item             | .       | OB        |
+0 or more items    | .*      | OBS       |
+capture            | (re)    | :a<<r     |
+backreference      | \1      | BR[:a]    |
+</table>
+
+Simple Sequences
+
+Each item in the Reg::Array tries to match the item (or items) at the same
+relative point in the Array to be matched. Each item in the pattern can
+match more (or less) than one item in data. Subsequences are a good
+example of patterns that match more than one item. 
+
+Reg::Array is created by applying the unary plus operator to an Array, like so:
+
+<example 5 -- sequence matching>
++[1,/^a/,item_that.size]===x
+
+#equivalent to:
+#(x.size==3 and x[0]==1 and /^a/===x[1] and x[2].size) rescue false
+
+Matches:
+[1,"a","b"]
+[1,"aardvark",[]]
+
+Doesn't  match:
+[1,"a","b",<red>:foo</red>]
+[<red>0</red>,1,"a","b"]
+[<red>2</red>,"a","b"]
+[1,<red>""</red>,"b"]
+[1,"a",<red>:b</red>]
+[1,"a"]   <red>#no 3rd element
+[1,<red>[</red>"a","b"<red>]</red>]
+</example>
+
+Because each pattern within this Reg::Array is a scalar matcher, this
+pattern matches arrays of exactly 3 items, where the first is the number
+1, the second is a string beginning with 'a', and the third is an object
+that responds to #size and has a #size that is not nil (or false). 
+
+Subsequences
+
+Reg subsequences can be thought of as roughly equivalent to parenthesized
+expressions in Regexp. They contain a series of matchers, which must all
+match in order at the place where the subequence occurs in the enclosing
+Reg::Array. Subsequences must always be contained with a Reg::Array; they
+cannot be used on their own. However, they need not be directly within the
+Reg::Array; usually, they will be inside a Reg::Repeat, some kind of
+Reg::Logical expression, or another Subsequence. 
+
+Here is another array matcher; this one contains 2 patterns. The first
+matches the number 1, the second is a subsequence, which itself contains 2
+more patterns. The totality is exactly equivalent to the previous example. 
+
+<example 6 -- subsequence matching>
++[1,-[/^a/,item_that.size]]
+
+#equivalent to:
+#(x.size==3 and x[0]==1 and /^a/===x[1] and x[2].size) rescue false
+
+
+#Matches:
+[1,"a","b"]
+[1,"aardvark",[]]
+
+#Doesn't  match:
+[1,"a","b",<red>:foo</red>]
+[<red>0</red>,1,"a","b"]
+[<red>2</red>,"a","b"]
+[1,<red>""</red>,"b"]
+[1,"a",<red>:b</red>]
+[1,"a"]   <red>#no 3rd element
+[1,<red>[</red>"a","b"<red>]</red>]
+</example>
+
+
+Nested Sequences
+
+So is Reg::Array a scalar or vector matcher?
+
+<example 7 -- matching an array containing an array>
++[1,+[/^a/,item_that.size]]===x
+
+#equivalent to:
+#(x.size==2 and x[0]==1 and 
+#  x[1].size==2 and /^a/===x[1][0] and x[1][1].size) rescue false
+
+#Matches:
+[1,["a","b"]]
+[1,["aardvark",[]]]
+
+#Doesn't  match:
+[1,"a","b"]
+[1,"aardvark",[]]
+</example>
+
+This example helps illustrate the 
+paradox about arrays and array matchers. Is an
+array a vector, which contains a sequence of items, or a scalar, a single
+item that can be contained in a vector? Likewise, is an array matcher a
+vector, which matches a list of 
+scalars, or is it a scalar, which
+matches a single item? 
+
+The answer is that it is both; it acts as a scalar within the expression
+that contains it. But Reg::Array sets up a new (vector) context for
+matching to occur in. 
+
+Repetitions
+
+Repetitions allow you to match the same pattern multiple times within a
+sequence. The number of times to match can be constant (please match this
+pattern 5 times) or can vary (at least 5 times) (at most 5 times) (between
+5 and 10 times). The +, -, and * operators create repetitions. These work
+similarly to the +, ?, and * operators of Regexp. 
+
+<example 8>
+#Repetition:
++[1,(2..98)*5,99]   #exactly 5
++[1,(2..98)+5,99]   #at least 5
++[1,(2..98)-5,99]   #at most 5
++[1,(2..98)*(5..10),99]   #between 5 and 10
++[1,(2..98).*,99]   #any number
++[1,(2..98).+,99]   #at least 1
++[1,(2..98).-,99]   #at most 1
+
+</example>
+
+The pattern repeated can also be a subsequence or other vector matcher,
+allowing more than one item to be matched on each loop pass.
+
+Repetitions and subsequences only make sense within an array pattern, tho
+they need not be directly within the array. (They can be nested inside
+another repetition or subsequence, for instance.)
+
+The number of times to repeat is determined by the number (or range) to
+the right of the repetition operator. If no number is given, they default
+to the count that will allow them to work like the corresponding Regexp
+repetition operator (with - standing in for ?).  +,*,and- each take a
+sensible default argument, as illustrated here. Now who said ruby doesn't
+have unary postfix operators? Note: the dot is required when using +, *, 
+and - as postfix operators. 
+
+Backtracking
+<example 9 -- Regexp Backtracking>
+
+/<yellow>foo</yellow><red>.*</red><green>bar</green>/==="foo some random stuff bar" 
+
+"<yellow>foo</yellow><red> some random stuff bar</red>" 
+"<yellow>foo</yellow><red> some random stuff ba</red>r" 
+"<yellow>foo</yellow><red> some random stuff b</red>ar" 
+"<yellow>foo</yellow><red> some random stuff </red><green>bar</green>" 
+</example>
+
+About the regexp: clearly, this matches strings that begin with foo,
+end with bar, and have anything else in between.  However, there's a
+little extra magic going on under the surface that you may not be aware
+of. There are basically 3 sub-expressions here, /foo/, /bar/, and /.*/.
+The latter is the interesting one. 
+
+It's a repetition operator, one of the types that can cause backtracking.
+Each sub-pattern matches sequentially, so in this case first /foo/
+matches, then /.*/ matches everything up until the end of the string,
+_including_the_"bar"_. Then there's nothing left for /bar/ to match, so
+the /bar/ sub-expression fails. This does not necessarily cause the whole
+expression to fail; instead, the regexp goes back to previous
+sub-expressions to see if they have a different way to match that will
+allow /bar/ to match. /.*/ can match any number of chars, so it gives up
+the last char it matched, "r". So then the regexp goes on to try to match
+/bar/ again, but /bar/ still still won't match just "r". This process
+continues twice more until /.*/ has given up the whole of "bar", which the
+pattern /bar/ can match (finally) and the pattern as a whole can succeed. 
+
+Regexp's | operator can also cause backtracking.
+
+<example 10 -- Alternation causes backtracking>
+ #alternation can also cause backtracking
+/<green>eft</green>(<yellow>foobar</yellow>|<red>foo</red>)<blue>bar</blue>/==="eftfoobar"
+"<green>eft</green><yellow>foobar</yellow>"  #first foobar matches, leaving nothing for final bar
+"<green>eft</green><red>foo</red><blue>bar</blue>"  #backtracks to match just foo, letting final bar match
+</example>
+
+Here is a Reg expression that uses backtracking:
+<example 11 -- Backtracking in a Reg matcher>
++[1,(2..99).*,99]===x
+#equivalent to: (with backtracking optimized away)
+#  (x[0]==1 and x[1...-1].all?{|y| (2..99)===y } and x[-1]==99)
+
++[<red>1</red>,<yellow>(2..99).*</yellow>,<green>99</green>]===[1,50,99]  
+
+[<red>1</red>,<yellow>50,99</yellow>]
+[<red>1</red>,<yellow>50</yellow>,<green>99</green>]
+</example>
+
+Vector Logicals
+
+Recall the logical operators we met some time ago? Well, the arguments to
+them need not be strictly scalar (== matching only one item) as I showed
+before. The arguments can be vector patterns (matching more or less than 1
+item), such as a subsequence or repetition, as long as the entire
+expression is ultimately contained in an array matcher. 
+
+Using the or operator within an array matcher is another way to make
+backtracking happen, especially if its arguments are vectors. 
+
+When matchers of differing lengths are ored together, the resulting
+matcher matches whatever was matched by 
+the first sub-expression that happens to match.
+
+When matchers of differing lengths are anded together, the resulting
+matcher matches whatever the longest subexpression matched. 
+
+Negation of a scalar pattern is always scalar (still matches just 1 item),
+but negation of a non-scalar is automatically a lookahead. 
+
+<example 12 -- Vector logic>
++[-[1,2,3] | /dd/*(2..8) | :foo]
+
+#matches
+ [1,2,3]
+["adduced", "udder"]
+[:foo]
+
+
+
++[-[/a/,/b/,/c/] & (item_that.size < 4) ]
+
+#Matches:
+["al", "robert", "chuck"]
+
+# Doesn't match:
+["albert", "robert", "chuck"]
+</example>
+
+Recursive patterns
+
+Occasionally, it is necessary to be able to have patterns contain 
+themselves, in order to be able to match (for instance) 
+a parenthesized list which
+can contain another parenthesized list or to match an array that
+can contain
+another array of the same type.
+
+Suppose you want to match a tree. How would you do it? Let's suppose nodes
+in our tree are 3-element arrays, the first and third elements of which
+are the left and right sub-trees, respectively. (Or nil if no sub-tree is
+present.) The middle element is an integer representing the value of this
+node. The code to match such a tree would look like this: 
+
+<example 13 -- recursive matchers>
+tree=Reg.const
+tree.set! +[tree|nil, Integer, tree|nil]
+
+#equivalent to:
+#def treematch(x)
+#  x.size===3 and 
+#  x[0]==nil || treematch(x[0]) and 
+#  Integer===x[1] and 
+#  x[2].nil? || treematch(x[2])
+#end
+</example>
+
+(Unfortunately, the |nil bug in 
+the 0.4.5 release breaks this particular
+usage as well.)
+
+This syntax is somewhat clumsy. I apologize; it's the best that
+I have come up with so far.
+
+OBS and unanchoring
+
+I haven't talked explicitly about this, but unlike Regexp, Reg::Array is
+implicitly anchored on both ends. So, instead of putting special symbols
+at the edges of an array pattern to anchor it (^ and $ in Regexp), you
+must put special stuff in if you want it to _not_ be anchored. The special
+pattern OBS represents 0 or more of any item. To be strictly equivalent to
+Regexp, you need to use OBS.l. (The 'l' operator makes OBS (or any
+pattern) lazy. Not working in 0.4.5.)
+
+<listing 5 -- unanchored matching>
+OBS=OB.*
+
++[1,2,3]===x
+#equivalent to:
+#x==[1,2,3]
+
++[OBS,1,2,3]===x
+#equivalent to:
+#x[-1]==3 and x[-2]==2 and x[-1]==1
+
++[OBS,1,2,3,OBS]===x
+#equivalent to:
+#x.size.-(3).downto(0) {|i|
+#  break(true) if x[i]==1 and x[i+1]==2 and x[i+2]==3
+#}
+
++[OBS.l,1,2,3,OBS.l]===x
+#equivalent to:
+#x.each_with_index{|v,i|
+#  break(true) if v==1 and x[i+1]==2 and x[i+2]==3
+#}
+
++[1,2,3,OBS,4,5,6,OBS,7,8,9]===x
+#equivalent to:
+#x[0]==1 and x[1]==2 and x[2]==3 and
+#x[-1]==9 and x[-2]==8 and x[-3]==7 and
+#x.size.-(6).downto(3){|i|
+#  break(true) if x[i]==4 and x[i+1]==5 and x[i+2]==6
+#}
+</listing>
+
+Captures and Backreferences
+
+[[DOESN'T WORK YET]]
+A backreference allows you to match 
+repeated data. First, you must capture the data that will be repeated 
+using Symbol#<<; then you make a backreference to it at a subsequent
+point in the larger match.
+
+Unlike Regexp, in Reg, backreferenced items are always referred to by
+name instead of number. In Regexp, parentheses captures a value. In Reg, Symbol#<< is the capture operator. 
+
+<example 14 -- backreferences>
++[:a<<OB, BR[:a]]
+#equivalent to:
+#x.size==2 and (a=x[0]).is_a? Object and x[1]==a
+</example>
+
+Suppose you want to match arrays containing exactly two of the same item. Here's how you'd do it. The first matcher matches any item and captures 
+it into the 'variable' named :a. The second matcher is a backreference to
+the captured item in :a. 
+
+Substitutions
+
+So far, everything I've introduced only allows you to make queries on 
+your data; let's look at substitutions, which allow you to change 
+(part of) the data once it has been found to match. 
+[[DOESN'T WORK YET]]
+
+<example 15 -- Substitutions>
++[String>>1, OBS]  
+
+#x.size==2 and String===x[0] and x[0]=1
+</example>
+ 
+This example would match arrays beginning with a string,
+replacing that string with the number 1.
+
+=== never changes matched data, even if matcher had a 
+substitution in it, so #match! must be used instead.
+
+References:
+reg rubyforge project
+blankslate and deferred by jim weirich
+http://onestepback.org/index.cgi/Tech/Ruby/SlowingDownCalculations.rdoc
+grammar and syntax by eric mahurin
+some other parser proj by ???
+rparsec
+spirit from boost c++ library
+mauricio's blog post
+gema

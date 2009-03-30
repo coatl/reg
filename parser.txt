@@ -1,0 +1,188 @@
+Lalr(n) parsing with reg
+
+Yesterday, I introduced my the Ruby Extended Grammar, a pattern matching 
+library for ruby data. Astute readers may have noticed a slight 
+misnomer. Reg is not a grammar (parser), nor a tool for grammars. It's 
+really just a very fancy regular expression engine. Regular expressions 
+are equivalent to state machines. State machines are not powerful 
+enough by themselves to solve interesting parsing problems -- that is, 
+how to parse a language like ruby with infix operators of different 
+precedence and associativity.
+
+Handling precedence and associativity requires a lalr(1) parser. Let me
+explain briefly the lalr algorithm:
+
+The important lalr data structures are the stack and input. The input
+is simply a stream of tokens fed into the parser, as it requests them. The
+next token(s) waiting to be taken off the input is called the lookahead. 
+The stack contains the results of partially parsed expressions. At each step
+of the parse process, the parser decides (based on what's found at the top 
+of the stack and in the lookahead) whether to shift another token off the 
+input onto the stack or to reduce some of the tokens at the top of the stack
+using the rules of the language's grammar. At the end, we expect to see the 
+input empty and on the stack a single token, which represents the parse tree
+of the entire program.
+
+Normal parsers (also called compiler compilers) use a big complicated
+table to decide at runtime whether to shift or reduce and, if reducing, which 
+rule to reduce by. This table represents the compiled form of the language 
+grammar. That's why they're called compiler compilers. My approach is rather
+different, and might best be described as an interpreter interpreter. (Or, if
+it's to be used in a compiler, it would be a compiler interpreter.)
+
+Instead of shifting or choosing one rule to match at each step, each rule is
+given a chance to match, and when none can, then the input is shifted. Reg 
+is used as the pattern matching engine, and a small wrapper layer manages
+the parser data structures and invokes reg at each step to do a match 
+attempt. I believe this approach is in general equivalent to the normal lalr
+algorithm.
+
+Yesterday's reg release contained a sketch of these ideas in the form of a parser for a 
+small, bc-like calculator language, in calc.reg. I've also reproduced it below. Basically, it's
+a subset of ruby with only local variables, numbers, a few operators (+, -, *, /, 
+=, ;), parentheses, and p as the sole function. Although small, 
+parsing this language is a representative problem because it requires solving 
+precedence and associativity.
+
+The heart of the parser are its grammar rules, reproduced here:
+
+#last element is always lookahead
+Reduce=
+  -[ -[:p, '(', exp, ')'].sub {PrintExp.new BR(2)},  OB ] |                # p(exp)
+  -[ -['(', exp, ')']    .sub {BR(1)},               OB ] |                # (exp)
+  -[ -[exp, leftop, exp] .sub {OpExp.new *BR(0..2)}, regproc{lowerop(BR(1))} ] |    # exp+exp
+  -[ exp, -[';']         .sub [],                    :EOI ] |              #elide final trailing ;
+  -[ -[name, '=', exp]   .sub {AssignExp.new BR(0),BR(2)}, lowerop('=') ]  #name=exp
+
+Precedence is handled by the middle rule. This rule reduces infix operator 
+expressions (except =). It only matches if the lookahead does not contain a 
+higher precedence operator. This ensures that expressions like '3+4*5' will
+parse correctly.
+
+Associativity is handled by the last rule. = is the only right-associative 
+operator, so it's the only one that has to be handled specially. Again, it 
+allows a reduce only if the lookahead is not also right-associative (and lower 
+precedence...). This ensures that expressions like 'a=b=c' will parse 
+correctly.
+
+The great advantage of the interpreter interpreter is flexibility. It would 
+be quite easy to extend this parser -- even at runtime -- by adding things 
+at the right place in Reduce. The disadvantage is performance, which is
+likely to be very bad currently. The current implementation of reg is not
+optimized to any great extent. Many regexp-type optimizations could be 
+applied to reg. Optimized regexp engines can actually be quite fast, so,
+(aside from performance issues with ruby itself) an optimized reg might
+actually be competitive with a table-based parser in terms of performance.
+Keep in mind that table-based parsers are not actually the fastest; the 
+gold standard are hand-coded or direct execution parsers.
+
+Error detection is an area that might be troublesome. I haven't given this
+a lot of thought yet, but I think it's approachable, without
+causing too much pain. One way might be to wait until a synchronizing 
+token, then report errors. 
+
+
+Some comments made by florian pflug have clarified things for me:
+
+Hm.. I belive it not that different. The tables of an LR(k) parser
+specifiy for each input symbol, and each top-of-stack
+        a) An action (either shift, or "reduct p" where p is a rule
+        ( a production) of your grammar
+        b) A "goto" - the new state the parser shall transition to.
+
+Your represent the "action" table implicitly - you scan
+the rules for every symbol you read, and decide to shift
+or to reduce based on that, instead of looking into a predefined
+table. Therefore, you just trade compiler-compile time for runtime -
+but the mechanism is the same.
+
+The goto table is entirely absent in your approach - but this
+stems from the fact that you don't _need_ to remeber a state.
+The state of a table-based LR(k) parser is just an "abbreviation"
+for the current state of the stack. An table-based LR(k) parser
+decided wether to shift or to reduce _soley_ based on the current
+input symbol, and the top-of-the-stack. It therefore needs a state,
+to "remeber" what it put on the stack previously. Each state
+of a LR(k) parser represents a _single_ production (or rule) - but
+a rule can be represented by more than one state.
+
+I believe that you could improve the performance of your parser by
+just-in-time compiling of the action and goto tables, or some
+çÒuivalent thing.
+
+You could, for example, calculate the FOLLOW set (The set of symbols
+which can follow a valid right-hand side of a given rule). Then,
+you just have to try those rules which have the current top-of-stack
+in their FOLLOW set.
+
+This would give a sort of an half-table-based LR(k) parser.
+
+Anyway, thanks for your cool work, and for getting me interested in
+parsers again ;-)
+
+greetings, Florian Pflug
+
+
+calc.reg:
+
+require 'reg'
+
+#warning: this code is untested
+#currently, it will not work because it depends on 
+#features of reg which do not exist (backreferences
+and substitutions). in addition,
+#it is likely to contain serious bugs, as it has
+#not been thoroughly tested or assured in any way.
+#nevertheless, it should give you a good idea of
+#how this sort of thing works.
+
+
+precedence={
+  :'('=>10, :p=>10,
+  :* =>9, :/ =>9,
+  :+ =>8, :- =>8,
+  :'='=>7,
+  :';'=>6
+}
+name=String.reg
+exp=name|PrintExp|OpExp|AssignExp|Number    #definitions of the expression classes ommitted for brevity
+leftop=/^[*\/;+-]$/
+rightop=/^=$/
+op=leftop|rightop
+def lowerop opname
+  regproc{
+    leftop & proceq(Symbol) {|v| precedence[opname] >= precedence[v] }
+  }
+end
+
+#last element is always lookahead
+Reduce=
+  -[ -[:p, '(', exp, ')'].sub {PrintExp.new BR(2)},  OB ] |                # p(exp)
+  -[ -['(', exp, ')']    .sub {BR(1)},               OB ] |                # (exp)
+  -[ -[exp, leftop, exp] .sub {OpExp.new *BR(0..2)}, regproc{lowerop(BR[1])} ] |    # exp+exp
+  -[ exp, -[';']         .sub [],                    :EOI ] |              #elide final trailing ;
+  -[ -[name, '=', exp]   .sub {AssignExp.new BR(0),BR(2)}, lowerop('=') ]  #name=exp
+
+#last element of stack is always lookahead
+def reduceloop(stack)
+  old_stack=stack
+  while stack.match +[OBS, Reduce]
+  end
+  stack.equal? old_stack or raise 'error'
+end
+
+#last element of stack is always lookahead
+def parse(input)
+  input<<:EOI
+  stack=[input.shift]
+  until input.empty? and +[OB,:EOI]===stack
+    stack.push input.shift  #shift
+    reduceloop stack
+  end
+  return stack.first
+end
+
+
+
+
+
