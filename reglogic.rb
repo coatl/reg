@@ -150,7 +150,7 @@ module Reg
 
       super
     end
-    def subregs; @regs end
+    def subregs; @regs.dup end
     
     
     def op(reg)

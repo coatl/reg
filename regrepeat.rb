@@ -180,7 +180,7 @@ module Reg
       end
     end
 
-    def subregs; Any  end
+    def subregs; [Any]  end
 
     def inspect
       if @times.end.to_f.infinite?
@@ -226,7 +226,7 @@ module Reg
     end
 
  
-    def subregs; Any  end
+    def subregs; [Any]  end
 
     def inspect
       if @times.end.to_f.infinite?

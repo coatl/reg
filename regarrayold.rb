@@ -452,7 +452,7 @@ module Reg
       return result
     end
 
-    def subregs; @regs end
+    def subregs; @regs.dup end
   end
 
   #--------------------------
