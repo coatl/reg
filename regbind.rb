@@ -68,6 +68,19 @@ module Reg
   end
 
   #-------------------------------------
+  class BoundRef
+    def initialize(name)
+      @name=name
+    end
+    attr :name
+
+    def <<(other)
+      ::Reg::Bound.new(name,other)
+    end
+  end
+
+
+  #-------------------------------------
   class SideEffect
     include Reg,Composite
   
