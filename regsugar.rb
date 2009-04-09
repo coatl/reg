@@ -70,6 +70,10 @@ require 'set'
       def <<(other)
         ::Reg::Bound.new(self,other)
       end
+
+      def ~
+        ::Reg::BoundRef.new(self)
+      end
     end
     #i'd like to take String#-@ and #** too...
     
