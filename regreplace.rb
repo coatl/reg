@@ -137,7 +137,7 @@ module Reg
       when ::Reg::Reg: huh #error?
       else 
         needsinterp=false
-        GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
+        Ron::GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
           case datum
           when Deferred,Wrapper: 
             break needsinterp=true
@@ -168,7 +168,7 @@ module Reg
       end
       
       def fill_out(progress,gpoint)
-        GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
+        Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
           @alwaysdupit.include?(o) ? o.dup : 
           case o
