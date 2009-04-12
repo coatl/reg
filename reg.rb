@@ -38,5 +38,4 @@ require 'regposition'
 require 'regold'  #will go away
 
 require 'regcompiler' #engine, bah
-2+2
 #Kernel.instance_eval( &Reg::TLA_pirate)
