@@ -89,7 +89,7 @@ module Reg
     include BlankSlate
     restore :inspect,:extend
     restore :respond_to?
-    restore :respond_to?
+#    restore :respond_to?
     include Formula
     attr_reader :operation, :args, :target, :block
         
