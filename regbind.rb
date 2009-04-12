@@ -69,6 +69,7 @@ module Reg
 
   #-------------------------------------
   class BoundRef
+    include Formula
     def initialize(name)
       @name=name
     end
@@ -76,6 +77,10 @@ module Reg
 
     def <<(other)
       ::Reg::Bound.new(name,other)
+    end
+
+    def formula_value(session,other)
+      session[@name]
     end
   end
 
