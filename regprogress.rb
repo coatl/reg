@@ -18,9 +18,9 @@
 =end
 begin require 'rubygems'; rescue Exception; end
 
-$:<<"../sequence/lib"  #temp hack
-require 'warning'
-warning "sequence found via temporary hack"
+#$:<<"../sequence/lib"  #temp hack
+#require 'warning'
+#warning "sequence found via temporary hack"
 #$MMATCH_PROGRESS=1
 
 require 'forwardable'
