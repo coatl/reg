@@ -67,8 +67,8 @@ module Reg
     include Reg,TransformUndoable,Composite
     
     def initialize(reg,rep)
+      Replace===rep or rep=Replace.make_replace( rep )
       @left,@right=reg,rep
-      Replace===rep or Replace.make_replace rep
       @reg,@rep=reg,rep
       super
     end
