@@ -128,7 +128,10 @@ module Reg
 
       def defang!(x)
         class<<x
-          instance_methods.+(private_instance_methods).grep(/\A\#/).each{|n| alias_method n[1..-1],n }
+          ms=instance_methods#.+(private_instance_methods)
+          candidates=ms.grep(/\A\#/)
+          candidates-=ms.grep(/\A[^\#]/).map{|n| "#"+n}
+          candidates.each{|n| alias_method n[1..-1],n }
           undef method_missing
         end if Deferred===x
         return x
