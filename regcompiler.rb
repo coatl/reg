@@ -2232,9 +2232,10 @@ C
         warning %#should awaken main thread after all subthreads sleep#
         warning %#need counting semaphores#
         @wake_reason=ThreadResync
-        @wake_main.unlock
+        @wake_main.signal
+        p 1
       end
-      @threadctl[idx].lock
+      @threadctl[idx].wait
       cu.pos=Thread.current[:pos]
       progress.throw 
       }}
