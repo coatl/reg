@@ -788,7 +788,7 @@ end
      assert_ene Reg[-[OB*2]*(1..2)], [:foo]*3 
      assert_eee Reg[-[OB+2]*(1..2)], [:foo]*3 
      assert_eee Reg[-[OB-2]*(1..2)], [:foo]*3 
-     assert_ene( +[-[2.reg-2], 3.reg.bp],   [2,2,4] ) #is the world flat?
+     assert_ene( +[-[2.reg-2], 3.reg],   [2,2,4] ) #is the world flat?
      assert_eee( +[-[2.reg-2], 3],   [2,2,3] ) #is the world flat?
      assert_ene( +[-[ 1.reg.-, 2.reg-2], 3],   [1,2,2,4] ) #is the world flat?
      assert_eee( +[0,-[ 1.reg.-, 2.reg-2], 3],   [0,1,2,2,3] ) #is the world flat?
@@ -896,7 +896,7 @@ end
      assert_eee( +[-[ 1.reg.-, 2.reg.-], 3],   [1,2,3] ) #is the world flat?
 $RegTraceEnable=1 #debugging zone:
 #require 'reginstrumentation'
-     assert_ene( +[-[ 1.reg.-, 2.reg.-], 3.reg.bp],   [1,2,4] ) #is the world flat?
+     assert_ene( +[-[ 1.reg.-, 2.reg.-], 3.reg],   [1,2,4] ) #is the world flat?
      assert_eee( +[-[ 1.reg.-, 2.reg-2], 3],   [1,2,2,3] ) #is the world flat?
      assert_ene( +[-[ 1.reg.-, 2.reg-2], 3],   [1,2,2,4] ) #is the world flat?
 
