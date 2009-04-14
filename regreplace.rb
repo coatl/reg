@@ -193,11 +193,11 @@ module Reg
           useit[0]=true
           @alwaysdupit.include?(o) ? o.dup : 
           case o
-          when ItemThatLike,RegThatLike:
+          when ItemThatLike,RegThatLike
             o.formula_value(gpoint.old_value)
-          when Deferred:           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
+          when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
             o.formula_value(progress)
-          when Literal:  o.unwrap #literal items should be unwrapped
+          when Literal;  o.unwrap #literal items should be unwrapped
           else useit[0]=false
           end        
         }
