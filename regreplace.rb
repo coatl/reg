@@ -172,8 +172,9 @@ module Reg
         GraphWalk.traverse(repldata,&traverser)
       end
       
-      def fill_out_simple(other)
-        Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
+      def fill_out_simple(session,other)
+        incomplete=false
+        result=Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
           @alwaysdupit.include?(o) ? o.dup : 
           case o
