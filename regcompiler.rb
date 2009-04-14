@@ -1450,6 +1450,9 @@ END2
 =end
 
 =begin another try at Reg::Hash and Object
+    warning "Reg::Hash, Reg::Object and friends need to be made possibly Undoable and Multiple again"
+    warning "if the compiled implementations of those matchers are to be used"
+    warning "take out the Reg::Hash/Object hacks in multiple_infection and undoable_infection"
     #--------------------------------------------------------------
     module Map
      def generate_generic(
