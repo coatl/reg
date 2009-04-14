@@ -30,6 +30,10 @@ module Reg
       else raise NameNotBound #name not bound yet? that's an error
       end
     end
+
+    def formula_value(session,other)
+      session.fetch(name,session["final"] ? nil : self)
+    end
   end
 
   class NameNotBound<RuntimeError; end
