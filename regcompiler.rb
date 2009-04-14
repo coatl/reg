@@ -474,7 +474,7 @@ module Reg
     
     def multiple_infection(*regs)
       regs.empty? and regs=subregs
-      unless regs.grep(Undoable).empty?
+      unless regs.grep(Undoable).empty? or ::Reg::Hash===self or ::Reg::Object===self
         extend Multiple
       end
       #Reg::Array overrides this to do nothing
@@ -482,7 +482,7 @@ module Reg
     end
 
     def undoable_infection
-      unless subregs.grep(Undoable).empty?
+      unless subregs.grep(Undoable).empty? or ::Reg::Hash===self or ::Reg::Object===self
         extend Undoable
       end
     end
