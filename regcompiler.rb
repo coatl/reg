@@ -2083,13 +2083,22 @@ C
   #--------------------------------------------------------------
   class AndMachine
   
-    class Semaphore<ConditionVariable
+    class Semaphore<SizedQueue
+    #ick, i shouldn't have to build a semaphore in terms of a SizedQueue... 
+    #semaphore is the more primitive notion, SizedQueue should be built on it instead
+      def initialize
+        super(1)
+      end
+      undef_method :max=,:max,:<<,:push,:pop,:shift
+
+      private :enq,:deq
+
       def wait
-        assert !Thread.critical
-        Thread.critical=true
-          @waiters.push(Thread.current)
-        Thread.stop
-        Thread.critical=false
+        deq
+      end
+
+      def signal
+        enq nil
       end
     end
         
