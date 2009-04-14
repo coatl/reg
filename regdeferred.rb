@@ -48,7 +48,9 @@ module Reg
   
     def BlankSlate.included(othermod)
       othermod.instance_eval {
-        instance_methods.each { |m| 
+        ms=instance_methods#+private_instance_methods
+        ms.each { |m| 
+          next if m=="initialize"
           alias_method "##{m}", m #archive m
           undef_method m unless m =~ /^__/ || m=='instance_eval'
         }
@@ -57,7 +59,9 @@ module Reg
     end
     def BlankSlate.extended(other)
       class <<other
-        instance_methods.each { |m| 
+        ms=instance_methods#+private_instance_methods
+        ms.each { |m| 
+          next if m=="initialize"
           alias_method "##{m}", m #archive m
           undef_method m unless m =~ /^__/ || m=='instance_eval'
         }
