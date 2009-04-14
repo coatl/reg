@@ -74,6 +74,11 @@ module Reg
     end
 
     attr_reader :left,:right
+    attr_reader :reg,:rep
+
+    alias from left
+    alias to right
+
      
     def mmatch(progress)
       origpos=progress.get_index
