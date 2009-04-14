@@ -2023,16 +2023,43 @@ end
 
     instance_eval(&WrapBmatch)
     def generate_cmatch
+        return "    yield\n" if @regs.empty?
         warning %#pull out ordinary matchers for processing outside the andmachine and its threads#
         warning "not sure whether to use progress's version of catch/throw here"
         maybe_progress="progress."
         #maybe_progress=nil
-        @a_regs=@regs.dup
-        @cb_regs=@a_regs.delete_if{|reg| /^[cb]/===match_method(reg)}
-        warning %#ok, now do something with @a_regs and @cb_regs...#
-        <<END
+        @a_regs=(0...@regs.size).to_a
+        @cb_regs,@a_regs=@a_regs.partition{|reg_n| /^[cb]/===match_method(@regs[reg_n])}
+        unless @a_regs.empty?
+          a_part=<<-A
+    x=progress.cursor.readahead1
+    progress.throw unless #{
+      @a_regs.map{|a| "    @regs[#{a}]===x"}.join(" and \n")
+    }
+          A
+          return a_part+"    progress.cursor.read1\n    yield\n" if @cb_regs.empty?
+          @cb_regs<<@a_regs.first unless @cb_regs.empty?#signal to andmachine that >=1 item must always match
+        end
+        @c_regs,@b_regs=@cb_regs.partition{|reg_n| /^c/===match_method(@regs[reg_n])}
+        @c_regs=@regs.values_at(*@c_regs)
+#        @b_regs=@regs.values_at(*@b_regs)
+        unless @b_regs.empty?
+          b_part=<<-B
+    cu=progress.cursor
+    ends=[]
+    pos=cu.pos
+    #{@b_regs.map{|n| "
+      @regs[#{n}].bmatch(progress) or progress.throw
+      ends<<cu.pos
+      pos=cu.pos
+    "}}
+          B
+          return a_part.to_s+b_part+"    cu.pos=ends.max\n    yield\n" if @c_regs.empty?
+        end
+    <<C
     #p :and_cmatch
-    ands=::Reg::AndMachine.new(progress,*@regs)
+    #{a_part}#{b_part}
+    ands=::Reg::AndMachine.new(progress,*@c_regs+[OB*ends.max])
     #{maybe_progress}catch(:RegAndFail){
     loop{
       progress.bt_stop{
