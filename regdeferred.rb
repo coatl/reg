@@ -17,6 +17,8 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 =end
 
+warn "there seems to be some confusion currently about what the arguments to formula_value should be"
+
 #----------------------------------
 module Kernel
   def formula_value(*ctx) #hopefully, no-one else will ever use this same name....
