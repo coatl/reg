@@ -2105,12 +2105,11 @@ C
     def initialize progress, *regs
       @progress,@regs=progress,regs
       
-      @wake_main=Mutex.new
-      @wake_main.lock
+      @wake_main=Semaphore.new
 
       @threads=[]
       
-      @threadctl=(0...@regs.size).map{m=Mutex.new; m.lock; m}
+      @threadctl=(0...@regs.size).map{Semaphore.new}
 
       #create a thread for each subexpression
       #each thread gets its own progress.
@@ -2128,7 +2127,7 @@ C
       @longest=nil
       if @regs.size.nonzero? 
         start_thread 0,@progress.cursor.pos
-        @wake_main.lock #wait til all children finish
+        @wake_main.wait #wait til all children finish
       end
     end
     
@@ -2149,11 +2148,11 @@ C
       
       if @longest
             #after having inheirited its length, reawaken the longest thread
-        @threadctl[@longest].unlock
+        @threadctl[@longest].signal
       
       end
       
-      # @wake_main.lock #wait til all children finish
+      # @wake_main.wait #wait til all children finish
  
         # if any thread woke us because
         #it failed, return false, 
@@ -2196,7 +2195,7 @@ C
       andprogress=And::ThreadProgress.new(@regs[idx],@progress)
       @progress.child_threads.push @threads[idx]= 
         Thread.new(andprogress,idx,origpos,&method(:thread))
-      @threadctl[idx].unlock
+      @threadctl[idx].signal
     end
     
     def vmatch(reg,progress)
@@ -2218,7 +2217,7 @@ C
       warning %#need counting semaphores#
       progress.thread=Thread.current
       Thread.current[:progress]=progress
-      @threadctl[idx].lock
+      @threadctl[idx].wait
       #p :start_thread, idx
       cu=progress.cursor
       progress.send($bt_catch_method){
