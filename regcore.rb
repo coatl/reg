@@ -370,6 +370,7 @@ module Reg  #namespace
 
   #--------------------------
   class Literal < Equals #a literalized Reg
+    #literal is really the same as const... the 2 classes should be merged
     def reg; @o end
     def lit; Literal.new self end
     def unlit; @o end
