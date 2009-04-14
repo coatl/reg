@@ -40,7 +40,7 @@ module Reg
 
   class Transform
     def === other #this is a hack
-      result= @reg===other
+      result= from===other
       session=Thread.current[:Reg_xform_session]
       if result and session
         begin
