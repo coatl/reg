@@ -185,7 +185,9 @@ module Reg
           when Literal;  o.unwrap #literal items should be unwrapped
           when BoundRef; o.formula_value(session,other)
           else useit[0]=false
-          end        
+          end
+          incomplete=true if Deferred===newo and not Literal===o
+          newo
         }
       end
 
