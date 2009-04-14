@@ -18,7 +18,7 @@
 =end
 
 require 'regdeferred'  #for BlankSlate
-#require 'rog'
+require "ron"
 
 module Reg
   def self.minlen_formula regx, session={}
@@ -151,7 +151,7 @@ module Reg
       def self.set!
         raise TypeError,'Reg::Constant can only be set once'
       end
-      result=Recursive( self, areg )
+      result=Ron::Recursive( self, areg )
       freeze
       result
     end
