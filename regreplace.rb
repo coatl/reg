@@ -177,7 +177,7 @@ module Reg
         result=Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
           @alwaysdupit.include?(o) ? o.dup : 
-          case o
+          newo=case o
 #          when ItemThatLike,RegThatLike;
 #            o.formula_value(other)
           when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
