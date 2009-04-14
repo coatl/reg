@@ -2259,7 +2259,7 @@ C
   
   class InhibitBacktracking < Wrapper
     include HasBmatch
-    instance_eval &WrapCmatch
+    instance_eval(&WrapCmatch)
     def generate_bmatch
       "@o.bmatch(progress)\n"
     end
