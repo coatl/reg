@@ -189,6 +189,8 @@ module Reg
           incomplete=true if Deferred===newo and not Literal===o
           newo
         }
+        result=Form.new result if incomplete and !session["final"]
+        return result
       end
 
       def fill_out(progress,gpoint)
