@@ -528,10 +528,10 @@ class TC_Reg
     assert_eee( +[  -[(:a<<OB).-.side_effect{|p| puts2= p[:a]}.undo{puts2=nil}, 5],],[999,6] )
     assert_equal nil, puts2
 
-    assert_eee( +[  OB.side_effect{|p| puts2= 1}.undo{puts2=nil}, 66],],[99,66] )
+    assert_eee( +[  OB.side_effect{|p| puts2= 1}.undo{puts2=nil}, 66,],[99,66] )
     assert_equal nil, puts2
 
-    assert_eee( +[  OB.side_effect{|p| puts2= 1}.undo{puts2=false}, 66],],[99,66] )
+    assert_eee( +[  OB.side_effect{|p| puts2= 1}.undo{puts2=false}, 66,],[99,66] )
     assert_equal false, puts2
   end  
    
