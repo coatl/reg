@@ -581,8 +581,12 @@ module Reg
   end
 
   #--------------------------------------------------------------
+  module Composite
+    include CompileUtils  #is it really so simple? idunno.....
+  end
+
+  #--------------------------------------------------------------
   warning "need to extend all Composite patterns with Has[BC]match in initialize()"
-  warning "include CompileUtils in all Composites"
   warning "need to call gen_cmatch and gen_bmatch at right times"
   
   #--------------------------------------------------------------
