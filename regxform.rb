@@ -43,19 +43,19 @@ module Reg
       result= from===other
       session=Thread.current[:Reg_xform_session]
       if result and session
-        begin
-          oldme=session[:$&]
-          session[:$&]=self
-          session[other.__id__]=
-            case @rep
-            when Replace::Form; @rep.fill_out_simple(session,other) #should handle Literals as well...
-            when Deferred; @rep #can't replace this yet either... #was: @rep.formula_value(session,other)
-            when BoundRef; @rep #can't replace it yet...
-            else @rep
-            end
-        ensure
-          session[:$&]=oldme
+        locals={:self=>other}
+        if $&
+          locals[:$&]=$&
+          locals[:$`]=$`
+          locals[:$']=$'
+          $&.to_a.each_with_index{|br,i| locals[:"$#{i}"]=br }
         end
+        session[other.__id__]=
+          case to
+          when Replace::Form; to.fill_out_simple(locals,other) #should handle Literals as well...
+          when Deferred,BoundRef; to.formula_value(locals,other)
+          else to
+          end
       end
       return result
     end
