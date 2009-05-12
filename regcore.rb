@@ -127,7 +127,8 @@ module Reg  #namespace
       end
       return result
     end
-    
+
+=begin
     #--------------------------
     #set a breakpoint when matches against a Reg
     #are made. of dubious value to those unfamiliar
@@ -151,7 +152,8 @@ module Reg  #namespace
       end
       self
     end
-    
+=end    
+
     #--------------------------
     #makes matcher greedy. on by default
     def g; self end

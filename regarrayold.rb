@@ -18,6 +18,32 @@
 =end
 
 module Reg
+  module Reg
+    #--------------------------
+    #set a breakpoint when matches against a Reg
+    #are made. of dubious value to those unfamiliar
+    #with Reg::Array source code.
+    def bp #:nodoc: all
+      class <<self #:nodoc:
+        alias_method :unbroken___eee, :===     #:nodoc:
+        alias_method :unbroken___mmatch,
+           method_defined?(:mmatch) ? :mmatch : :fail #:nodoc:
+        def ===(other)  #:nodoc:
+          (defined? DEBUGGER__ or defined? Debugger) and Process.kill("INT",0)
+          unbroken___eee other
+        rescue
+          false
+        end
+
+        def mmatch(*xx)  #:nodoc:
+          (defined? DEBUGGER__ or defined? Debugger) and Process.kill("INT",0)
+          unbroken___mmatch(*xx)
+        end
+      end
+      self
+    end
+  end
+
   module Backtrace
     #--------------------------
     def Backtrace.clean_result(result,restype=RR)
