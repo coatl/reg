@@ -31,7 +31,7 @@ module Reg
       end
     end
 
-    def formula_value(session,other)
+    def formula_value(other,session)
       session.fetch(name,session["final"] ? nil : self)
     end
   end
@@ -53,7 +53,7 @@ module Reg
         session[other.__id__]=
           case to
           when Replace::Form; to.fill_out_simple(locals,other) #should handle Literals as well...
-          when Deferred,BoundRef; to.formula_value(locals,other)
+          when Deferred,BoundRef; to.formula_value(other,locals)
           else to
           end
       end

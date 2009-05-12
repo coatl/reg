@@ -118,8 +118,8 @@ module Reg
     def self.evaluate(item,progress,gpoint) #at match time
       huh
       case item
-      when BackrefLike: item.formula_value(huh_progress)
-      when ItemThatLike: item.formula_value(gpoint.old_value)
+      when BackrefLike: item.formula_value(nil,progress)
+      when ItemThatLike: item.formula_value(gpoint.old_value,progress)
 #      when Bound: huh
 #      when Transform: huh????
       when ::Reg::Array: 
@@ -179,11 +179,11 @@ module Reg
           @alwaysdupit.include?(o) ? o.dup : 
           newo=case o
 #          when ItemThatLike,RegThatLike;
-#            o.formula_value(session,other)
+#            o.formula_value(other,session)
           when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
-            o.formula_value(session,other)
+            o.formula_value(other,session)
           when Literal;  o.unwrap #literal items should be unwrapped
-          when BoundRef; o.formula_value(session,other)
+          when BoundRef; o.formula_value(other,session)
           else useit[0]=false
           end
           incomplete=true if Deferred===newo and not Literal===o
@@ -199,9 +199,9 @@ module Reg
           @alwaysdupit.include?(o) ? o.dup : 
           case o
           when ItemThatLike,RegThatLike
-            o.formula_value(gpoint.old_value)
+            o.formula_value(gpoint.old_value,progress)
           when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
-            o.formula_value(progress)
+            o.formula_value(huh nil,progress)
           when Literal;  o.unwrap #literal items should be unwrapped
           else useit[0]=false
           end        

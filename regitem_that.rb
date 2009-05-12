@@ -66,7 +66,7 @@ module Reg
   module DeferredQuery
   #just an ancestor for ItemThatLike and RegThatLike
     def eee(item)
-      formula_value item rescue false
+      formula_value item,{} rescue false
     end
     alias === eee #this doesn't work!!! WHY????
     #there's no way to define the method === in this

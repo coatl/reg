@@ -1146,7 +1146,7 @@ END2
     
     
     def generate_bmatch
-            "    cells=formula_value(progress) and \n"+
+            "    cells=formula_value(huh,progress) and \n"+
       "    cells=::Reg::BackrefLike.to_indexed(progress,cells) and \n"+
       "    cu.skip_literals cells\n"
     end
@@ -1163,7 +1163,7 @@ END2
     include HasBmatch
     
     def generate_bmatch
-             "    cells=formula_value(progress) and \n"+
+             "    cells=formula_value(huh,progress) and \n"+
       "    cells=::Reg::BackrefLike.to_indexed(progress,cells) and \n"+
       "    cu.skip_literals cells\n"
     end
@@ -1175,7 +1175,7 @@ END2
     include HasBmatch
     
     def generate_bmatch
-             "    cells=formula_value(progress) and \n"+
+             "    cells=formula_value(huh,progress) and \n"+
       "    cells=::Reg::BackrefLike.to_indexed(progress,cells) and \n"+
       "    cu.skip_literals cells\n"
      end

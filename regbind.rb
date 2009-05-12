@@ -79,7 +79,7 @@ module Reg
       ::Reg::Bound.new(name,other)
     end
 
-    def formula_value(session,other)
+    def formula_value(other,session)
       session[@name]
     end
   end

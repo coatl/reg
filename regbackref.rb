@@ -44,7 +44,7 @@ module Reg
       #super
     end
     
-    def formula_value(progress)
+    def formula_value(other,progress)
       progress.lookup_var @name
     end
     
