@@ -160,6 +160,7 @@ module Reg
   class Progress
 
    #---------------------------------------------
+    #remove_method :initialize
     def initialize(matcher,cursor)
 #      @parent=nil      #eliminate
 #      @matcher=matcher #move into Context
@@ -198,6 +199,7 @@ module Reg
       on_throw(:RegMatchFail,   [:move, -1],:endcontext)
     end
     
+    undef newcontext
     def newcontext(matcher,data=@cursor)
       assert !data.is_a?(::Sequence::Position)
       @cursor=data
@@ -205,12 +207,14 @@ module Reg
       @path.push data, matcher
     end
     
+    undef endcontext
     def endcontext
       @path.pop
       @cursor=@path.get_last_cursor
       assert !@cursor.is_a?( ::Sequence::Position )
     end
     
+    undef backup_stacks
     def backup_stacks
       assert(matchfail_todo.size >= 1)
 
@@ -452,6 +456,7 @@ module Reg
   
   #--------------------------------------------------------------
   module Multiple
+    undef ===
     def ===(other)
       itemrange===1 or return 
       pr=Progress.new self, ::Sequence::SingleItem[other]
@@ -465,6 +470,7 @@ module Reg
   
   #--------------------------------------------------------------
   module Composite
+    undef at_construct_time
     def at_construct_time(*args)
       multiple_infection(*args)
       undoable_infection
@@ -472,6 +478,7 @@ module Reg
       cmatch_and_bound_infection
     end  
     
+    undef multiple_infection
     def multiple_infection(*regs)
       regs.empty? and regs=subregs
       unless regs.grep(Undoable).empty? or ::Reg::Hash===self or ::Reg::Object===self
@@ -481,6 +488,7 @@ module Reg
       #Multiples in the #subregs of Hash,Object,RestrictHash,Case are prohibited
     end
 
+    undef undoable_infection
     def undoable_infection
       unless subregs.grep(Undoable).empty? or ::Reg::Hash===self or ::Reg::Object===self
         extend Undoable
@@ -690,6 +698,7 @@ module Reg
         }    
     end
     
+    undef ===
     def ===(other)
       pr=Progress.new self, ::Sequence::SingleItem[other]
       pr.catch( :RegMatchSucceed ){
@@ -704,6 +713,7 @@ module Reg
 
   #--------------------------------------------------------------
   class Subseq
+    #remove_method :initialize
     def initialize(*args) #override version in regarray.rb
       super
     end
@@ -726,6 +736,7 @@ module Reg
   class Repeat
     include CompileUtils
 
+    #remove_method :initialize
     def initialize(reg,times)
       Integer===times and times=times..times
       times.exclude_end? and times=times.begin..times.end-1
@@ -846,6 +857,7 @@ END2
   
   #--------------------------------------------------------------
   class ManyClass
+    #remove_method :initialize
     def initialize(times=0..Infinity)
       Integer===times and times=times..times
       @times=times
@@ -883,6 +895,7 @@ END2
     #--------------------------------------------------------------
     class ManyLazyClass
       include HasCmatch
+      #remove_method :initialize
       def initialize(times=0..Infinity)
         Integer===times and times=times..times
         @times=times
@@ -2204,6 +2217,7 @@ C
       when HasBmatch: reg.bmatch(progress) and yield
       else progress.cursor.skip reg and yield
       end
+      p -1
       progress.throw
     end
     
@@ -2221,6 +2235,7 @@ C
       #p :start_thread, idx
       cu=progress.cursor
       progress.send($bt_catch_method){
+      p 0
       vmatch(@regs[idx],progress) {
       Thread.current[:pos]=cu.pos
       cu.pos=origpos
@@ -2242,7 +2257,9 @@ C
     #ensure
     
         @wake_reason=ThreadFail
+      p 1.9, @wake_main.locked?
         @wake_main.unlock
+        p 2
     end
   
   end

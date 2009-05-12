@@ -375,7 +375,7 @@ module Reg
     
     #---------------------------------------------
     def make_hash
-      warning "i want more here..."
+      warn "warning: i want more here..."
             hash
     end
        
