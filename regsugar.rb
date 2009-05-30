@@ -67,10 +67,6 @@ require 'set'
         ::Reg::Knows.new(self)
       end
       
-      def <<(other)
-        ::Reg::Bound.new(self,other)
-      end
-
       def ~
         ::Reg::BoundRef.new(self)
       end

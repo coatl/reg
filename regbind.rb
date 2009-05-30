@@ -21,6 +21,7 @@ module Reg
     def bind(name=self)
       Bound.new(name,self)
     end
+    alias % bind
     
     def side_effect(&block); SideEffect.new(self,&block) end
     def undo(&block); Undo.new(self,&block) end
