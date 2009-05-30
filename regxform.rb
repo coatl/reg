@@ -43,7 +43,7 @@ module Reg
       result= from===other
       session=Thread.current[:Reg_xform_session]
       if result and session
-        locals={:self=>other}
+        locals={:self=>other,:session => session}
         if $&
           locals[:$&]=$&
           locals[:$`]=$`
