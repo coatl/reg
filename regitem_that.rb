@@ -29,8 +29,8 @@ module Reg
           #significant if order is important to you
           #the #included methods are perhaps not called when i think they should be....
           #(DON'T simplify the next line; it'll break.)
-        [BlankSlate ,Formula, BlockLike].each{|mod| include mod}
-        restore :inspect,:extend,:call
+        [BlankSlate ,];[Formula, BlockLike].each{|mod| include mod}
+#        restore :inspect,:extend,:call
 
         alias === eeee #workaround-- shouldn't be needed
         alias formula_value call
@@ -56,6 +56,11 @@ module Reg
     end
     alias === eeee #does nothing in includers.... why?
     def formula_value *a,&b; call( *a,&b) end
+
+    def % name
+      super unless Symbol===name
+      Bound.new(self,name)
+    end
 
     
     def mixmod; ItemThatLike end
