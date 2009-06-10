@@ -39,6 +39,16 @@ module Reg
     end
   end
 
+  module Formula  #more hackery
+    def % other
+      if Symbol===other
+        Reg::Bound.new(self,other)
+      else
+        super
+      end
+    end
+  end
+
   class NameNotBound<RuntimeError; end
 
   class Transform
