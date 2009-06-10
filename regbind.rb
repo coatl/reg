@@ -29,8 +29,8 @@ module Reg
 
     def normalize_bind_name(name)
       case name    
-      when Reg: name=name.inspect
-      when Symbol:
+      when Reg; name=name.inspect
+      when Symbol
       else name=name.to_s.to_sym
       end
     end
