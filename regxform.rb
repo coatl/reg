@@ -50,6 +50,7 @@ module Reg
   end
 
   class NameNotBound<RuntimeError; end
+  class ReplacingNilError<RuntimeError; end
 
   class Transform
     def inspect
@@ -59,6 +60,7 @@ module Reg
       result= from===other
       session=Thread.current[:Reg_xform_session]
       if result and session
+        raise ReplacingNilError,"replaces of nil or false are not allowed" unless other
         locals={:self=>other,:session => session}
         if $&
           locals[:$&]=$&
