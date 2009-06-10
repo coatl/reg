@@ -23,6 +23,9 @@ module Reg
   end
 
   class BoundRef
+    def inspect
+      "~:#{name}"
+    end
     def === other #this is a hack
       session=Thread.current[:Reg_xform_session]
       if session and session.has_key? @name
@@ -39,6 +42,9 @@ module Reg
   class NameNotBound<RuntimeError; end
 
   class Transform
+    def inspect
+      from.inspect+" >> "+to.inspect
+    end
     def === other #this is a hack
       result= from===other
       session=Thread.current[:Reg_xform_session]
