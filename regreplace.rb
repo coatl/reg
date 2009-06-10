@@ -118,33 +118,33 @@ module Reg
     def self.evaluate(item,progress,gpoint) #at match time
       huh
       case item
-      when BackrefLike: item.formula_value(nil,progress)
-      when ItemThatLike: item.formula_value(gpoint.old_value,progress)
+      when BackrefLike; item.formula_value(nil,progress)
+      when ItemThatLike; item.formula_value(gpoint.old_value,progress)
 #      when Bound: huh
 #      when Transform: huh????
-      when ::Reg::Array: 
+      when ::Reg::Array 
         assert gpoint.is_a?( GraphPoint::Array)
         [item.regs]
-      when ::Reg::Subseq:
+      when ::Reg::Subseq
         assert gpoint.is_a?( GraphPoint::Array)
         item.regs
-      when ::Array: huh 'like Reg::Array or Reg::Subseq?'
-      when ::Reg::Wrapper: item.unwrap
-      when Replace::Form: item.fill_out(progress,gpoint)
+      when ::Array; huh 'like Reg::Array or Reg::Subseq?'
+      when ::Reg::Wrapper; item.unwrap
+      when Replace::Form; item.fill_out(progress,gpoint)
       else item #like it was wrapped in Reg::Fixed
       end
     end
   
     def self.make_replace item #at compile time
       case item
-      when Deferred,Wrapper: #do nothing
-      when ::Reg::Subseq: huh
-      when ::Reg::Reg: huh #error?
+      when Deferred,Wrapper,BoundRef #do nothing
+      when ::Reg::Subseq; huh
+      when ::Reg::Reg; huh #error?
       else 
         needsinterp=false
         Ron::GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
           case datum
-          when Deferred,Wrapper: 
+          when Deferred,Wrapper
             break needsinterp=true
           end
         }
