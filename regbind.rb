@@ -19,6 +19,7 @@
 module Reg
   module Reg
     def bind(name=self)
+      name=name.name if BoundRef===name
       Bound.new(name,self)
     end
     alias % bind
