@@ -26,6 +26,7 @@ module Reg
     
     def side_effect(&block); SideEffect.new(self,&block) end
     def undo(&block); Undo.new(self,&block) end
+    def trace(&block); Trace.new(self,&block) end
 
     def normalize_bind_name(name)
       case name    
@@ -86,7 +87,49 @@ module Reg
     end
   end
 
+  #-------------------------------------
+  class Trace
+    include Reg,Composite
+  
+    def initialize(reg,&block)
+      @reg,@block=reg,block
+      super
+#      extend( HasCmatch===@reg ? HasCmatch : HasBmatch )
+    end
+  
+    def === other
+      result= @reg===other
+      @block.call @reg,other,result
+      return result
+    end
 
+      def generate_bmatch
+        "
+        begin
+          item=progress.cursor.readahead1
+          result=@reg.bmatch progress
+        ensure
+          @block.call @reg,item,result
+        end
+        "
+      end
+      def generate_cmatch
+        "
+        begin
+          success=nil
+          item=progress.cursor.readahead1
+          @reg.cmatch(progress){
+            @block.call @reg,item,true
+            success=true
+            yield
+          }
+        ensure
+          @block.call @reg,item,false unless success
+        end
+        "
+      end
+  end
+  
   #-------------------------------------
   class SideEffect
     include Reg,Composite
