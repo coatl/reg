@@ -2051,9 +2051,9 @@ end
     }
           A
           return a_part+"    progress.cursor.read1\n    yield\n" if @cb_regs.empty?
-          @cb_regs<<@a_regs.first unless @cb_regs.empty?#signal to andmachine that >=1 item must always match
         end
         @c_regs,@b_regs=@cb_regs.partition{|reg_n| /^c/===match_method(@regs[reg_n])}
+        @c_regs<<OB unless @c_regs.empty?#signal to andmachine that >=1 item must always match
         @c_regs=@regs.values_at(*@c_regs)
 #        @b_regs=@regs.values_at(*@b_regs)
         unless @b_regs.empty?
@@ -2064,8 +2064,7 @@ end
     #{@b_regs.map{|n| "
       @regs[#{n}].bmatch(progress) or progress.throw
       ends<<cu.pos
-      pos=cu.pos
-    "}}
+    "}.join("\n      cu.pos=pos\n")}
           B
           return a_part.to_s+b_part+"    cu.pos=ends.max\n    yield\n" if @c_regs.empty?
         end
