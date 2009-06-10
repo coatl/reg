@@ -20,6 +20,15 @@ module Reg
       end
       return result
     end
+
+    def formula_value other,session #another hack...
+      result= @reg.formula_value other,session
+      
+      if session and !session.has_key? @name
+        session[@name]=result
+      end
+      return result
+    end
   end
 
   class BoundRef
