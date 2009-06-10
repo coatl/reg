@@ -66,7 +66,7 @@ module Reg
     end
     
     def inspect
-      @name.inspect+"<<"+@reg.inspect
+      @reg.inspect+"%"+@name.inspect
     end
   end
 
@@ -78,12 +78,29 @@ module Reg
     end
     attr :name
 
-    def <<(other)
-      ::Reg::Bound.new(name,other)
+    def formula_value(other,session)
+      session[@name]
+    end
+
+    def == other
+      BoundRef===other and other.name==name
+    end
+
+    def hash
+      "BoundRef of ".<<(name).hash
+    end
+  end
+
+
+  #-------------------------------------
+  class WithBoundRefValues
+    include Formula
+    def initialize(br,values)
+      @br,@values=br,values
     end
 
     def formula_value(other,session)
-      session[@name]
+      @br.formula_value(other,session.dup.merge!(@values))
     end
   end
 
