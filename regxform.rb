@@ -71,7 +71,8 @@ module Reg
         session[other.__id__]=
           case to
           when Replace::Form; to.fill_out_simple(locals,other) #should handle Literals as well...
-          when Deferred,BoundRef; to.formula_value(other,locals)
+          when BoundRef; to.formula_value(other,locals) #must be eval'd early...?
+          when Formula; WithBoundRefValues.new(to,locals)
           else to
           end
       end
