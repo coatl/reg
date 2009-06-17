@@ -2238,7 +2238,7 @@ end
       #p :start_thread, idx
       cu=progress.cursor
       progress.send($bt_catch_method){
-      p 0
+      #p 0
       vmatch(@regs[idx],progress) {
       Thread.current[:pos]=cu.pos
       cu.pos=origpos
@@ -2251,7 +2251,7 @@ end
         warning %#need counting semaphores#
         @wake_reason=ThreadResync
         @wake_main.signal
-        p 1
+        #p 1
       end
       @threadctl[idx].wait
       cu.pos=Thread.current[:pos]
@@ -2260,9 +2260,9 @@ end
     #ensure
     
         @wake_reason=ThreadFail
-      p 1.9, @wake_main.locked?
-        @wake_main.unlock
-        p 2
+        #p 1.9, @wake_main.signalled?
+        @wake_main.signal
+        #p 2
     end
   
   end
