@@ -2071,7 +2071,7 @@ end
     return <<-C
     #p :and_cmatch
     #{a_part}#{b_part}
-    ands=::Reg::AndMachine.new(progress,*@c_regs+[OB*ends.max])
+    ands=::Reg::AndMachine.new(progress,*@c_regs#{"+[OB*ends.max]" if b_part})
     #{maybe_progress}catch(:RegAndFail){
     loop{
       progress.bt_stop{
