@@ -2053,8 +2053,8 @@ end
           return a_part+"    progress.cursor.read1\n    yield\n" if @cb_regs.empty?
         end
         @c_regs,@b_regs=@cb_regs.partition{|reg_n| /^c/===match_method(@regs[reg_n])}
-        @c_regs<<OB unless @c_regs.empty?#signal to andmachine that >=1 item must always match
         @c_regs=@regs.values_at(*@c_regs)
+        @c_regs<<OB unless @c_regs.empty? or @a_regs.empty? #signal to andmachine that >=1 item must always match
 #        @b_regs=@regs.values_at(*@b_regs)
         unless @b_regs.empty?
           b_part=<<-B
