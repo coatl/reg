@@ -2147,10 +2147,10 @@ end
       end
     end
     
-    def continuing_to_match
-      @threads.each{|thr| progress=thr[:progress]
+    def continuing_to_match progress
+      @threads.each{|thr| thr_progress=thr[:progress]
         progress.variable_names.each{|vname|
-          raw_register_var vname,progress.raw_variable(vname)
+          progress.raw_register_var vname,thr_progress.raw_variable(vname)
         }
       }
     
@@ -2199,7 +2199,7 @@ end
       
       #p :end_try_match, @progress.cursor.pos
       
-      continuing_to_match if respond_to? :continuing_to_match
+      continuing_to_match(@progress) if respond_to? :continuing_to_match
       
       return true
     end
