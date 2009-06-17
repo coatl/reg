@@ -2216,8 +2216,8 @@ end
     
     def vmatch(reg,progress)
       case reg
-      when HasCmatch: reg.cmatch(progress){yield}
-      when HasBmatch: reg.bmatch(progress) and yield
+      when HasCmatch; reg.cmatch(progress){yield}
+      when HasBmatch; reg.bmatch(progress) and yield
       else progress.cursor.skip reg and yield
       end
       p -1
