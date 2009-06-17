@@ -2068,7 +2068,7 @@ end
           B
           return a_part.to_s+b_part+"    cu.pos=ends.max\n    yield\n" if @c_regs.empty?
         end
-    <<C
+    return <<-C
     #p :and_cmatch
     #{a_part}#{b_part}
     ands=::Reg::AndMachine.new(progress,*@c_regs+[OB*ends.max])
@@ -2084,7 +2084,7 @@ end
       }
     }
     }
-C
+    C
     end    
     
     false&& class Naive
