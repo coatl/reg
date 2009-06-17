@@ -2112,6 +2112,10 @@ end
       def signal
         enq nil
       end
+
+      def signalled?
+        size>0
+      end
     end
         
     def initialize progress, *regs
