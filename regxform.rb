@@ -116,3 +116,19 @@ module Reg
     def multiple_infection(*args) end #hacky, never do anything for Reg::BreakPoint
   end
 end
+
+tests=proc{
+  require 'test/unit'
+  class XformTests<Test::Unit::TestCase
+    alias assert_op assert_operator
+    def test_and_with_bound_and_replace
+      assert_op String>>"bop", :===, "sdfsdf"
+      assert String>>"bop" === "sdfsdf"
+      assert_op +{ :body=>String >> 'bop' }, :===, {:body => "23423"}
+      assert_op (/sdfgdf/ | Hash )%:top & +{ :body=>String >> 'bop' }, :===, {:body => "23423"}
+      assert_op( (((/7869/ | Hash )%:top) & +{ :body=>String >> 'sdf' }) | Symbol, :===, Hash[:body, "4564563"] )
+      assert_op( ((((/7869/ | Hash )%:top) & +{ :body=>String >> 'sdf' }) | Symbol).trace, :===, Hash[:body, "4564563"] )
+    end
+  end
+}
+tests[] if __FILE__==$0
