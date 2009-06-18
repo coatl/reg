@@ -90,4 +90,29 @@ module Reg
       return result
     end
   end
+
+ 
+  class And
+    def === other  #hack around bugs in AndMachine
+      @regs.each{|reg| return unless reg===other }
+      return other||true
+    end
+    def multiple_infection(*args) end #hacky, never do anything for Reg::And
+  end
+
+  class Or
+    def multiple_infection(*args) end #hacky, never do anything for Reg::Or
+  end
+  class Hash
+    def multiple_infection(*args) end #hacky, never do anything for Reg::Hash
+  end
+  class Object
+    def multiple_infection(*args) end #hacky, never do anything for Reg::Object
+  end
+  class Trace
+    def multiple_infection(*args) end #hacky, never do anything for Reg::Trace
+  end
+  class BP
+    def multiple_infection(*args) end #hacky, never do anything for Reg::BreakPoint
+  end
 end
