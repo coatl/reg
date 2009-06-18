@@ -109,6 +109,10 @@ module Reg
     include Reg,Composite
   
     def initialize(reg,&block)
+      block||=proc{|reg,other,result|
+        print "not " unless result
+        print reg.inspect, " === ", other.inspect, "\n"
+      } 
       @reg,@block=reg,block
       super
 #      extend( HasCmatch===@reg ? HasCmatch : HasBmatch )
