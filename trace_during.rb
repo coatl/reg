@@ -20,7 +20,7 @@
 
 module Kernel
 private
-  def trace(traces)
+  def trace_during(traces)
     if Proc===traces 
       handler=traces
       traces=nil

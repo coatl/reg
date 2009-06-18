@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 =end
 
-require 'trace.rb'
+require 'trace_during.rb'
 
 
 
@@ -213,7 +213,7 @@ module Reg  #namespace
           #out of ignorance that it's unnecessary
           
           eee_call=nil
-          result=!trace(proc do|event,*stuff| 
+          result=!trace_during(proc do|event,*stuff| 
             if /call$/===event
               eee_call=stuff
               
