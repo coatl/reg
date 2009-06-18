@@ -1,3 +1,5 @@
+require 'reg'
+require 'regcompiler'
 module Reg
   module Reg
     def xform!(datum,changed={})
