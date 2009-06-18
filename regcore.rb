@@ -200,9 +200,9 @@ module Reg  #namespace
     #it should work >99%, of the time I think. 
     def Reg.interesting_matcher?(mat) #a hack
       case mat
-        when Integer,Float,Symbol,true,false,nil,Method,UnboundMethod: false
-        when ItemThatLike,BackrefLike,Module,Set,Regexp,Range,::Reg::Reg: true
-        #when Symbol,Pathname: false
+        when Integer,Float,Symbol,true,false,nil,Method,UnboundMethod; false
+        when ItemThatLike,BackrefLike,Module,Set,Regexp,Range,::Reg::Reg; true
+        #when Symbol,Pathname; false
         else
           /^#<UnboundMethod: .*\(Kernel\)#===>$/===mat.method(:===).unbind.inspect and return false
           assert( /^#<UnboundMethod: .*\(?(#<)?[A-Z:][A-Za-z_:0-9]+\>?\)?#===>$/===mat.method(:===).unbind.inspect )
