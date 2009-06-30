@@ -98,9 +98,21 @@ module Reg
     def initialize(br,values)
       @br,@values=br,values
     end
+    attr_reader :br,:values
 
     def formula_value(other,session)
       @br.formula_value(other,session.dup.merge!(@values))
+    end
+
+    def == other
+      other.is_a? WithBoundRefValues and
+        @br==other.br and @values==other.values
+    end
+
+    def hash
+      #@value is a Hash, and Hash#hash doesn't work in ruby 1.8 (fixed in 1.9)
+      #I thought I had a good implementation of Hash#hash somewhere....
+      @br.hash^@value.huh_working_hash_hash
     end
   end
 
