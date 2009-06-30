@@ -8,14 +8,15 @@ module Reg
     def max_matches; @regs.size end
 
     def initialize(*regs)
-      regs.each{|reg| Multiple===reg and class<<self
-        undef mmatch
-        def mmatch(*xx) mmatch_full(*xx) end
-      end
+      regs.each{|reg| 
+        class<<self
+          undef mmatch
+          def mmatch(*xx) mmatch_full(*xx) end
+        end if Multiple===reg
       
-      if reg.equal? self or (Variable===reg and reg.lit.equal? self)
-        raise RegParseError, "subsequence cannot directly contain itself"
-      end
+        if reg.equal? self or (Variable===reg and reg.lit.equal? self)
+          raise RegParseError, "subsequence cannot directly contain itself"
+        end
       }
 
       super
