@@ -410,38 +410,38 @@ class TC_Reg
     assert_ene m, []
     assert_ene m, [1]
     
-    m=+[ :b<<-[],BR[:b] ]
+    m=+[ -[]%:b,BR[:b] ]
     
     assert_eee m, []
     assert_ene m, [1]
     
   
-    m=+[  -[:a<</k/.-, OBS], BR[:a] ]
+    m=+[  -[/k/.-%:a, OBS], BR[:a] ]
     
     assert_eee m, ['k',99, 'k']
     assert_eee m, ['k',99]
     assert_eee m, [99]
 
-    m=+[  +[:a<</k/.-, OBS], BR[:a] ]
+    m=+[  +[/k/.-%:a, OBS], BR[:a] ]
     
     assert_eee m, [['k',99], 'k']
     assert_eee m, [['k',99]]
     assert_eee m, [[99]]
 
-    m=+[  +[(:a<</k/).-, OBS], Range ]
+    m=+[  +[(/k/%:a).-, OBS], Range ]
     
     assert_ene m, [['k',99], 'k']
     assert_ene m, [['k',99]]
     assert_ene m, [[99]]
 
-    m=+[  +[(:a<</k/).-, OBS], BR[:a] ]
+    m=+[  +[(/k/%:a).-, OBS], BR[:a] ]
     
     assert_eee m, [['k',99], 'k']
     assert_ene m, [['k',99]]
     assert_ene m, [[99]]
 
 
-    m=+[  +[:a<</k/.-, Integer.*], BR[:a] ]
+    m=+[  +[/k/.-%:a, Integer.*], BR[:a] ]
     
     assert_eee m, [['k',99], 'k']
     assert_ene m, [['k',99]]
@@ -449,20 +449,20 @@ class TC_Reg
 
 
      #backreference to something in a nested array
-     assert_eee( +[1,2,3,+[:a<<OB*(1..2),OB*(1..2)],BR(:a)], [1,2,3,[4,5,6],4,5] )
+     assert_eee( +[1,2,3,+[OB*(1..2)%:a,OB*(1..2)],BR(:a)], [1,2,3,[4,5,6],4,5] )
 
      #backtracking should work in nested Reg::Array
-     assert_eee( +[1,2,3,+[:a<<OB*(1..2),OB*(1..2)],BR(:a)], [1,2,3,[4,5,6],4] )
+     assert_eee( +[1,2,3,+[OB*(1..2)%:a,OB*(1..2)],BR(:a)], [1,2,3,[4,5,6],4] )
    end
    
    
   def test_backtracking_in_heterogeneous_data_stuctures
      #backreference to something in a nested array in a nested hash
-     assert_eee( +{:foo=>+[:a<<OB*(1..2),OB*(1..2)]}, {:foo=>[4,5,6]} )
-     assert_eee( +[1,2,3,+{:foo=>+[:a<<OB*(1..2),OB*(1..2)]},BR(:a)], [1,2,3,{:foo=>[4,5,6]},4,5] )
+     assert_eee( +{:foo=>+[OB*(1..2)%:a,OB*(1..2)]}, {:foo=>[4,5,6]} )
+     assert_eee( +[1,2,3,+{:foo=>+[OB*(1..2)%:a,OB*(1..2)]},BR(:a)], [1,2,3,{:foo=>[4,5,6]},4,5] )
 
      #backtracking should work in nested Reg::Array in Reg::Hash or the like
-     assert_eee( +[1,2,3,+{:foo=>+[:a<<OB*(1..2),OB*(1..2)]},BR(:a)], [1,2,3,{:foo=>[4,5,6]},4] )
+     assert_eee( +[1,2,3,+{:foo=>+[OB*(1..2)%:a,OB*(1..2)]},BR(:a)], [1,2,3,{:foo=>[4,5,6]},4] )
 
 
      #...also do eg backtracking in reg::object... what else?
@@ -474,37 +474,37 @@ class TC_Reg
     assert_eee( +[  OB.finally{|p| puts= :foop}],[99] )
     assert_equal :foop, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).finally{|p| puts= :foop}],],[99] )
+    assert_eee( +[  -[(OB%:a).finally{|p| puts= :foop}],],[99] )
     assert_equal :foop, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).finally{|p| puts= p[:a]}],],[99] )
+    assert_eee( +[  -[(OB%:a).finally{|p| puts= p[:a]}],],[99] )
     assert_equal 99, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).-.finally{|p| puts= p[:a]}],],[99] )
+    assert_eee( +[  -[(OB%:a).-.finally{|p| puts= p[:a]}],],[99] )
     assert_equal 99, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).-.finally{|p| puts= p[:a]}, OBS],],[99] )
+    assert_eee( +[  -[(OB%:a).-.finally{|p| puts= p[:a]}, OBS],],[99] )
     assert_equal 99, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).-.finally{|p| puts= p[:a]}, OBS],],[99,100] )
+    assert_eee( +[  -[(OB%:a).-.finally{|p| puts= p[:a]}, OBS],],[99,100] )
     assert_equal 99, puts
     puts=nil
-    assert_eee( +[  -[(:a<<OB).-.finally{|p| puts= p[:a]}, OBS],],[99,100,101] )
+    assert_eee( +[  -[(OB%:a).-.finally{|p| puts= p[:a]}, OBS],],[99,100,101] )
     assert_equal 99, puts
     puts=nil
-    assert_ene( +[  -[(:a<<OB).-.finally{|p| puts= p[:a]}, 5],],[999,6] )
+    assert_ene( +[  -[(OB%:a).-.finally{|p| puts= p[:a]}, 5],],[999,6] )
     assert_equal nil, puts
   end  
    
   def test_later
     puts=puts2=nil
-    assert_eee( +[  -[(:a<<OB).-.later{|p| puts= p[:a]}, OBS],],[99] )
+    assert_eee( +[  -[(OB%:a).-.later{|p| puts= p[:a]}, OBS],],[99] )
     assert_equal 99, puts
-    assert_eee( +[ (:a<<OB).later{|p| puts= p[:a]}, OBS ], [9] )
+    assert_eee( +[ (OB%:a).later{|p| puts= p[:a]}, OBS ], [9] )
     assert_equal 9, puts
     assert_eee( +[ OB.later{|p| puts= 8}, OBS ], [88] )
     assert_equal 8, puts
-    assert_ene( +[  -[(:a<<OB).-.later{|p| puts2= 1}, 5],],[999,6] )
+    assert_ene( +[  -[(OB%:a).-.later{|p| puts2= 1}, 5],],[999,6] )
     assert_equal nil, puts2
     assert_ene( +[  -[OB.later{|p| puts2= 1}, 5],],[999,6] )
     assert_equal nil, puts2
@@ -512,20 +512,20 @@ class TC_Reg
    
   def test_side_effect
     puts=puts2=nil
-    assert_eee( +[  -[(:a<<OB).-.side_effect{|p| puts= p[:a]}, OBS],],[99] )
+    assert_eee( +[  -[(OB%:a).-.side_effect{|p| puts= p[:a]}, OBS],],[99] )
     assert_equal 99, puts
-    assert_eee( +[ (:a<<OB).side_effect{|p| puts= p[:a]}, OBS ], [9] )
+    assert_eee( +[ (OB%:a).side_effect{|p| puts= p[:a]}, OBS ], [9] )
     assert_equal 9, puts
     assert_eee( +[ OB.side_effect{|p| puts= 8}, OBS ], [88] )
     assert_equal 8, puts
-    assert_ene( +[  -[(:a<<OB).-.side_effect{|p| puts2= p[:a]}, 5],],[999,6] )
+    assert_ene( +[  -[(OB%:a).-.side_effect{|p| puts2= p[:a]}, 5],],[999,6] )
     assert_equal 999, puts2
   end  
    
   def test_undo
     puts=puts2=nil
 
-    assert_eee( +[  -[(:a<<OB).-.side_effect{|p| puts2= p[:a]}.undo{puts2=nil}, 5],],[999,6] )
+    assert_eee( +[  -[(OB%:a).-.side_effect{|p| puts2= p[:a]}.undo{puts2=nil}, 5],],[999,6] )
     assert_equal nil, puts2
 
     assert_eee( +[  OB.side_effect{|p| puts2= 1}.undo{puts2=nil}, 66,],[99,66] )
@@ -537,47 +537,47 @@ class TC_Reg
    
   
   def test_backtracking_in_ordered_hash
-    assert_eee( +[:foo.reg**+[:a<<OB.-,OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[1]} )
-    assert_eee( +[:foo.reg**+[:a<<OB.-,OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[]} )
+    assert_eee( +[:foo.reg**+[OB.-%:a,OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[1]} )
+    assert_eee( +[:foo.reg**+[OB.-%:a,OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[]} )
 
-    assert_eee( +[:foo.reg**+[OB.-,:a<<OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[1]} )
-    assert_eee( +[:foo.reg**+[OB.-,:a<<OB.-], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[]} )
+    assert_eee( +[:foo.reg**+[OB.-,OB.-%:a], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[1]} )
+    assert_eee( +[:foo.reg**+[OB.-,OB.-%:a], :bar.reg**+[BR[:a]]], {:foo=>[1], :bar=>[]} )
 
-    assert_eee( +[:foo.reg**+[:a<<OB*(1..2),OB*(1..2)], :bar.reg**+[BR[:a]]], {:foo=>[1,1,1], :bar=>[1]} )
-    assert_eee( +[:foo.reg**+[:a<<OB*(1..2),OB*(1..2)], :bar.reg**+[BR[:a]]], {:foo=>[1,1,1], :bar=>[1,1]} )
+    assert_eee( +[:foo.reg**+[OB*(1..2)%:a,OB*(1..2)], :bar.reg**+[BR[:a]]], {:foo=>[1,1,1], :bar=>[1]} )
+    assert_eee( +[:foo.reg**+[OB*(1..2)%:a,OB*(1..2)], :bar.reg**+[BR[:a]]], {:foo=>[1,1,1], :bar=>[1,1]} )
   end
    
 
   def test_backtracking_from_value_to_key_in_hash
-    assert_ene( +{+[:a<<OB.-,OB.-]=>+[BR[:a]]}, {[1,2,3]=>[1]} )
-    assert_eee( +{+[:a<<OB.-,OB.-]=>+[BR[:a]]}, {[1,2]=>[1]} )
-    assert_eee( +{+[:a<<OB.-,OB.-]=>+[BR[:a]]}, {[1]=>[1]} )
-    assert_eee( +{+[:a<<OB.-,OB.-]=>+[BR[:a]]}, {[1]=>[]} )
+    assert_ene( +{+[OB.-%:a,OB.-]=>+[BR[:a]]}, {[1,2,3]=>[1]} )
+    assert_eee( +{+[OB.-%:a,OB.-]=>+[BR[:a]]}, {[1,2]=>[1]} )
+    assert_eee( +{+[OB.-%:a,OB.-]=>+[BR[:a]]}, {[1]=>[1]} )
+    assert_eee( +{+[OB.-%:a,OB.-]=>+[BR[:a]]}, {[1]=>[]} )
 
-    assert_ene( +{+[OB.-,:a<<OB.-]=>+[BR[:a]]}, {[3,2,1]=>[1]} )
-    assert_eee( +{+[OB.-,:a<<OB.-]=>+[BR[:a]]}, {[2,1]=>[1]} )
-    assert_eee( +{+[OB.-,:a<<OB.-]=>+[BR[:a]]}, {[1]=>[1]} )
-    assert_eee( +{+[OB.-,:a<<OB.-]=>+[BR[:a]]}, {[1]=>[]} )
+    assert_ene( +{+[OB.-,OB.-%:a]=>+[BR[:a]]}, {[3,2,1]=>[1]} )
+    assert_eee( +{+[OB.-,OB.-%:a]=>+[BR[:a]]}, {[2,1]=>[1]} )
+    assert_eee( +{+[OB.-,OB.-%:a]=>+[BR[:a]]}, {[1]=>[1]} )
+    assert_eee( +{+[OB.-,OB.-%:a]=>+[BR[:a]]}, {[1]=>[]} )
 
-    assert_eee( +{+[:a<<OB*(1..2),OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1]} )
-    assert_eee( +{+[:a<<OB*(1..2),OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1,1]} )
-    assert_eee( +{+[OB*(1..2),:a<<OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1]} )
-    assert_eee( +{+[OB*(1..2),:a<<OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1,1]} )
+    assert_eee( +{+[OB*(1..2)%:a,OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1]} )
+    assert_eee( +{+[OB*(1..2)%:a,OB*(1..2)]=>+[BR[:a]]}, {[1,1,1]=>[1,1]} )
+    assert_eee( +{+[OB*(1..2),OB*(1..2)%:a]=>+[BR[:a]]}, {[1,1,1]=>[1]} )
+    assert_eee( +{+[OB*(1..2),OB*(1..2)%:a]=>+[BR[:a]]}, {[1,1,1]=>[1,1]} )
 
-    assert_ene( +[+[:a<<OB.-,OB.-]**+[BR[:a]]], {[1,2,3]=>[1]} )
-    assert_eee( +[+[:a<<OB.-,OB.-]**+[BR[:a]]], {[1,2]=>[1]} )
-    assert_eee( +[+[:a<<OB.-,OB.-]**+[BR[:a]]], {[1]=>[1]} )
-    assert_eee( +[+[:a<<OB.-,OB.-]**+[BR[:a]]], {[1]=>[]} )
+    assert_ene( +[+[OB.-%:a,OB.-]**+[BR[:a]]], {[1,2,3]=>[1]} )
+    assert_eee( +[+[OB.-%:a,OB.-]**+[BR[:a]]], {[1,2]=>[1]} )
+    assert_eee( +[+[OB.-%:a,OB.-]**+[BR[:a]]], {[1]=>[1]} )
+    assert_eee( +[+[OB.-%:a,OB.-]**+[BR[:a]]], {[1]=>[]} )
 
-    assert_ene( +[+[OB.-,:a<<OB.-]**+[BR[:a]]], {[3,2,1]=>[1]} )
-    assert_eee( +[+[OB.-,:a<<OB.-]**+[BR[:a]]], {[2,1]=>[1]} )
-    assert_eee( +[+[OB.-,:a<<OB.-]**+[BR[:a]]], {[1]=>[1]} )
-    assert_eee( +[+[OB.-,:a<<OB.-]**+[BR[:a]]], {[1]=>[]} )
+    assert_ene( +[+[OB.-,OB.-%:a]**+[BR[:a]]], {[3,2,1]=>[1]} )
+    assert_eee( +[+[OB.-,OB.-%:a]**+[BR[:a]]], {[2,1]=>[1]} )
+    assert_eee( +[+[OB.-,OB.-%:a]**+[BR[:a]]], {[1]=>[1]} )
+    assert_eee( +[+[OB.-,OB.-%:a]**+[BR[:a]]], {[1]=>[]} )
 
-    assert_eee( +[+[:a<<OB*(1..2),OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1]} )
-    assert_eee( +[+[:a<<OB*(1..2),OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1,1]} )
-    assert_eee( +[+[OB*(1..2),:a<<OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1]} )
-    assert_eee( +[+[OB*(1..2),:a<<OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1,1]} )
+    assert_eee( +[+[OB*(1..2)%:a,OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1]} )
+    assert_eee( +[+[OB*(1..2)%:a,OB*(1..2)]**+[BR[:a]]], {[1,1,1]=>[1,1]} )
+    assert_eee( +[+[OB*(1..2),OB*(1..2)%:a]**+[BR[:a]]], {[1,1,1]=>[1]} )
+    assert_eee( +[+[OB*(1..2),OB*(1..2)%:a]**+[BR[:a]]], {[1,1,1]=>[1,1]} )
   end
    
 
@@ -1803,7 +1803,7 @@ end
      vals_list=rest.pop
      vars=("a"...(?a+rest.size).chr).to_a
      pat=[]
-     rest.each_index{|i| pat<< (vars[i].to_sym<<rest[i]+1) }
+     rest.each_index{|i| pat<< ((rest[i]+1)%vars[i].to_sym) }
      regpat=+pat
      assert x=regpat.match( data )
      assert regpat.match([]).nil? unless rest.empty?
@@ -1821,7 +1821,7 @@ end
 
      #this way might make warnings...
      pat=[]
-     rest.each_index{|i| pat<< (vars[i].to_sym<<rest[i])+1 }
+     rest.each_index{|i| pat<< (rest[i]%vars[i].to_sym)+1 }
      regpat=+pat
      assert x=regpat.match( data)
      assert regpat.match([]).nil? unless rest.empty?
@@ -2039,7 +2039,7 @@ end
   end
 
   def test_subst
-     evenwink=+[-[ :even<<OB>>-[BR(:even),';)'], OB]+0,   OB.-]
+     evenwink=+[-[ OB%:even>>-[BR(:even),';)'], OB]+0,   OB.-]
     #be nice to abbreviate this to:
     #+[-[ OB<<-[BR,';)'], OB ]+0,   OB.-]
     
