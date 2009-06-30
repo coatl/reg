@@ -72,7 +72,7 @@ module Reg
       session=Thread.current[:Reg_xform_session]
       if result and session
         raise ReplacingNilError,"replaces of nil or false are not allowed" unless other
-        locals={:self=>other,:session => session}
+        locals={:self=>other}
         if $&
           locals[:$&]=$&
           locals[:$`]=$`
