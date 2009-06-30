@@ -5,9 +5,7 @@ module Reg
     def xform!(datum,changed={})
       datum or fail
       Thread.current[:Reg_xform_session]=session={}
-      self===datum or return
-      changed.merge!(session){|key,old,new| fail }
-      return datum
+      changed.merge!(session) if self===datum
     ensure
       Thread.current[:Reg_xform_session]=nil
     end
