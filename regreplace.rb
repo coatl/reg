@@ -138,8 +138,8 @@ module Reg
     def self.make_replace item #at compile time
       case item
       when Deferred,Wrapper,BoundRef #do nothing
-      when ::Reg::Subseq; huh
-      when ::Reg::Reg; huh #error?
+      #when ::Reg::Subseq; huh
+      #when ::Reg::Reg; huh #error?
       else 
         needsinterp=false
         Ron::GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
