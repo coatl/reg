@@ -148,7 +148,7 @@ module Reg
     def initialize(*regs)
       @regs=regs
       (@regs.size-1).downto(0){|i|
-        @regs[i,1]=*@regs[i].regs if self.class==@regs[i].class
+        @regs[i,1]=*@regs[i].subregs if self.class==@regs[i].class
       }
 
       super
