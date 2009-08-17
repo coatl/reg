@@ -164,7 +164,7 @@ module Reg
           
           cntrstack.push cntr     if cntr   
             case o
-            when Deferred,Literal: @alwaysdupit|=cntrstack
+            when Deferred,Literal; @alwaysdupit|=cntrstack
             end
             GraphWalk.traverse(o,&traverser)
           cntrstack.pop
