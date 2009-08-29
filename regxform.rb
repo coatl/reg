@@ -77,13 +77,16 @@ module Reg
           locals[:$']=$'
           $&.to_a.each_with_index{|br,i| locals[:"$#{i}"]=br }
         end
-        session[other.__id__]=
+        session[other.__id__]=WithBoundRefValues.new(to,locals)
+
+=begin
           case to
           when Replace::Form; to.fill_out_simple(locals,other) #should handle Literals as well...
           when BoundRef; to.formula_value(other,locals) #must be eval'd early...?
           when Formula; WithBoundRefValues.new(to,locals)
           else to
           end
+=end
       end
       return result
     end
