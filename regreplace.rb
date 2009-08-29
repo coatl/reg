@@ -182,13 +182,13 @@ module Reg
           newo=case o
 #          when ItemThatLike,RegThatLike;
 #            o.formula_value(other,session)
-          when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
+          when Formula           #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
             o.formula_value(other,session)
           when Literal;  o.unwrap #literal items should be unwrapped
           when BoundRef; o.formula_value(other,session)
           else useit[0]=false
           end
-          incomplete=true if Deferred===newo and not Literal===o
+          incomplete=true if Formula===newo and not Literal===o
           newo
         }
         result=Form.new result if incomplete and !session["final"]
