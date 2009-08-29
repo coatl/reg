@@ -129,7 +129,16 @@ module Reg
     def hash
       #@value is a Hash, and Hash#hash doesn't work in ruby 1.8 (fixed in 1.9)
       #I thought I had a good implementation of Hash#hash somewhere....
-      @br.hash^@value.huh_working_hash_hash
+      @br.hash^@values.to_a.sort_by{|(k,v)| k }.hash
+    end
+
+    def chain_to inner
+      ::Ron::GraphWalk.graphcopy(self){|cntr,o,i,ty,useit|
+        if BoundRef===o and o.name==:self
+          useit[0]=true
+          inner
+        end
+      }
     end
   end
 
