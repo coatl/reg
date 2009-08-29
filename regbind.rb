@@ -105,7 +105,20 @@ module Reg
     attr_reader :br,:values
 
     def formula_value(other,session)
-      @br.formula_value(other,session.dup.merge!(@values))
+      result=@br.formula_value(other,session.dup.merge!(@values))
+
+      if $Reg_rtrace and $Reg_rtrace===other
+        if values.size>1
+          vals=@values.dup
+          vals.delete :self
+          vals_str="values=#{vals.inspect}"
+        end
+        with=@br
+        with=with.repldata if Replace::Form===with
+        puts "replacing \n#{other.inspect} with \n#{with.inspect} #{vals_str}"
+      end
+
+      return result
     end
 
     def == other
