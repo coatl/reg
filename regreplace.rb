@@ -145,7 +145,7 @@ module Reg
         needsinterp=false
         Ron::GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
           case datum
-          when Deferred,Wrapper
+          when Deferred,Wrapper,BoundRef #,Formula ??
             break needsinterp=true
           end
         }
