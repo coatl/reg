@@ -121,8 +121,8 @@ module Reg
       case item
       when BackrefLike; item.formula_value(nil,progress)
       when ItemThatLike; item.formula_value(gpoint.old_value,progress)
-#      when Bound: huh
-#      when Transform: huh????
+#      when Bound; huh
+#      when Transform; huh????
       when ::Reg::Array 
         assert gpoint.is_a?( GraphPoint::Array)
         [item.regs]
