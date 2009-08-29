@@ -87,7 +87,7 @@ module Reg
     end
 
     def hash
-      "BoundRef of ".<<(name).hash
+      "BoundRef of ".<<(name.to_s).hash
     end
 
     def unparse o
