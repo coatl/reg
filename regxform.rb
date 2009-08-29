@@ -113,6 +113,18 @@ module Reg
   class BP
     def multiple_infection(*args) end #hacky, never do anything for Reg::BreakPoint
   end
+
+  class Finally
+    def ===(other)
+      result= @reg===other
+      session=Thread.current[:Reg_xform_session]
+      if result and session
+        session["finally"]||=[]
+        session["finally"]<<[@block,other]
+      end
+      result
+    end
+  end
 end
 
 tests=proc{
