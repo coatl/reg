@@ -172,6 +172,7 @@ module Reg
         }
         GraphWalk.traverse(repldata,&traverser)
       end
+      attr :repldata
       
       def fill_out_simple(session,other)
         incomplete=false
