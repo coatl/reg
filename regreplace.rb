@@ -34,8 +34,9 @@ module Reg
   class Finally
     include Reg,Undoable,Composite
     
-    def initialize(reg,block)
-      @reg,@block=reg,block
+    def initialize(reg,block=nil,&block2)
+      raise ArgumentError if block and block2
+      @reg,@block=reg,block||block2
       super
     end
     
