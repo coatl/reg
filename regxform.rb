@@ -89,6 +89,11 @@ module Reg
     end
   end
 
+  class Replace::Form
+    def formula_value other,session
+      fill_out_simple session,other
+    end
+  end
  
   class And
     def === other  #hack around bugs in AndMachine
