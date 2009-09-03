@@ -135,6 +135,10 @@ class TC_Reg
          ).send(op,val), :end]
     
   end
+
+  def test_replacement_construction
+    assert_nothing_raised{ Class>>[ (~:op).foo ] }
+  end 
  
   def test_object_matcher 
      #object matcher tests
