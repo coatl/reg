@@ -138,7 +138,7 @@ module Reg
     attr :regs
     class<<self
     def new(*regs)
-      warning "optimization of Logicals over a single sub-expression disabled"
+      #"optimization of Logicals over a single sub-expression disabled"
       #regs.size==1 and return regs.first
       regs=regs.map{|r| Deferred.defang! r }
       super

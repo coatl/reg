@@ -213,7 +213,6 @@ module Reg
         huh
       end
     
-      warn "unfinished code..."
     end
   end
   

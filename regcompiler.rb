@@ -2026,7 +2026,6 @@ end
       end
       alias [] lookup_var
     end          
-      warning "a deadlock has been observed, probably from the threads in AndMachine"
       warning "need more and concurrency testing"
       warning %#need to discover dependancies among and alternatives#
       #(ie a variable capture in one alternative being used in a backref
