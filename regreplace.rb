@@ -161,6 +161,23 @@ module Reg
     class Form #kinda like a lisp form... as far as i understand them anyway
       def initialize(repldata)
         @repldata=repldata
+        rebuild_dupset
+      end
+
+      def initialize_copy(other)
+        @repldata=other.repldata.clone rescue other.repldata
+        rebuild_dupset
+      end
+
+      def _dump
+        Marshal.dump(@repldata)
+      end
+
+      def self.load(str)
+        new(Marshal.load(str))
+      end
+
+      def rebuild_dupset
         cntrstack=[]
         @alwaysdupit=Set[]
         traverser=proc{|cntr,o,i,ty|
@@ -174,7 +191,13 @@ module Reg
         }
         Ron::GraphWalk.traverse(repldata,&traverser)
       end
+
       attr :repldata
+
+      def repldata= repldata
+        @repldata=repldata
+        rebuild_dupset
+      end
       
       def fill_out_simple(session,other)
         incomplete=false
