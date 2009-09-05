@@ -164,7 +164,7 @@ module Reg
         @alwaysdupit=Set[]
         traverser=proc{|cntr,o,i,ty|
           
-          cntrstack.push cntr     if cntr   
+          cntrstack.push cntr.__id__     if cntr   
             case o
             when Deferred,Literal; @alwaysdupit|=cntrstack
             end
@@ -179,7 +179,7 @@ module Reg
         incomplete=false
         result=Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
-          @alwaysdupit.include?(o) ? o.dup : 
+          @alwaysdupit.include?(o.__id__) ? o.dup : 
           newo=case o
 #          when ItemThatLike,RegThatLike;
 #            o.formula_value(other,session)
@@ -199,7 +199,7 @@ module Reg
       def fill_out(progress,gpoint)
         Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
-          @alwaysdupit.include?(o) ? o.dup : 
+          @alwaysdupit.include?(o.__id__) ? o.dup : 
           case o
           when ItemThatLike,RegThatLike
             o.formula_value(gpoint.old_value,progress)
