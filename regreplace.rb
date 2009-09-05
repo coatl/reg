@@ -16,7 +16,8 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 =end
-require 'reggraphpoint'
+require 'ron/graphedge'
+
 module Reg
   module Reg
 
@@ -168,16 +169,16 @@ module Reg
             case o
             when Deferred,Literal; @alwaysdupit|=cntrstack
             end
-            GraphWalk.traverse(o,&traverser)
+            Ron::GraphWalk.traverse(o,&traverser)
           cntrstack.pop
         }
-        GraphWalk.traverse(repldata,&traverser)
+        Ron::GraphWalk.traverse(repldata,&traverser)
       end
       attr :repldata
       
       def fill_out_simple(session,other)
         incomplete=false
-        result=Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
+        result=Ron::GraphWalk.breadth_graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
           @alwaysdupit.include?(o.__id__) ? o.dup : 
           newo=case o
@@ -197,7 +198,7 @@ module Reg
       end
 
       def fill_out(progress,gpoint)
-        Ron::GraphWalk.graphcopy(@repldata) {|cntr,o,i,ty,useit|
+        Ron::GraphWalk.breadth_graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
           @alwaysdupit.include?(o.__id__) ? o.dup : 
           case o
