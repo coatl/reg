@@ -138,15 +138,16 @@ module Reg
   
     def self.make_replace item #at compile time
       case item
-      when Deferred,Wrapper,BoundRef #do nothing
+      when Deferred,Wrapper,BoundRef; Deferred.defang! item
       #when ::Reg::Subseq; huh
       #when ::Reg::Reg; huh #error?
       else 
         needsinterp=false
-        Ron::GraphWalk.graphwalk(item){|cntr,datum,idx,idxtype|
+        Ron::GraphWalk.breadth_graphwalk(item){|cntr,datum,idx,idxtype|
+          Deferred.defang! datum
           case datum
           when Deferred,Wrapper,BoundRef #,Formula ??
-            break needsinterp=true
+            needsinterp=true
           end
         }
         needsinterp and item=Replace::Form.new(item)
