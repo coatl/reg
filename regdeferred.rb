@@ -134,10 +134,13 @@ module Reg
           candidates-=ms.grep(/\A[^\#]/).map{|n| "#"+n}
           candidates.each{|n| alias_method n[1..-1],n }
           undef method_missing
-        end if Deferred===x
+          include Defanged
+        end if Deferred===x and !Defanged===x
         return x
       end
     end
+
+    module Defanged;  end
 
     class Const 
       include BlankSlate
