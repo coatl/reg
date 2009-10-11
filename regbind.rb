@@ -105,7 +105,12 @@ module Reg
     attr_reader :br,:values
 
     def formula_value(other,session)
-      result=@br.formula_value(other,session.dup.merge!(@values))
+      saved_keys=@values.keys
+      saved=saved_keys.map{|k| session[k] }
+      result=@br.formula_value(other,session.merge!(@values))
+      saved_keys.each_with_index{|k,i|
+        session[k]=saved[i]
+      }
 
       if $Reg_rtrace and $Reg_rtrace===other
         if values.size>1
