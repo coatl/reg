@@ -50,6 +50,7 @@ module Reg
     end
 
     def formula_value(other,session)
+      warn "warning: BoundRef #{inspect} value missing" if !session.has_key?(name) and session["final"] 
       session.fetch(name,session["final"] ? nil : self)
     end
   end
