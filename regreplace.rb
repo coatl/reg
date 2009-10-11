@@ -220,7 +220,7 @@ module Reg
           when Formula           #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
             o.formula_value(other,session)
           when Literal;  o.unwrap #literal items should be unwrapped
-          when BoundRef; o.formula_value(other,session)
+          when BoundRef; o.formula_value(other,session) #unreachable; BoundRefs are always Formulas currently
           else useit[0]=false
           end
           incomplete=true if Formula===newo and not Literal===o
