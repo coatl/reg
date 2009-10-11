@@ -65,6 +65,12 @@ module Reg
     end
   end
 
+  module Composite
+    def at_construct_time(*args)
+      #do nothing, no infections at all are appropriate when using this file
+    end
+  end
+
   class NameNotBound<RuntimeError; end
   class ReplacingNilError<RuntimeError; end
 
