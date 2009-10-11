@@ -71,15 +71,18 @@ module Reg
     def initialize(reg,rep)
       Replace===rep or rep=Replace.make_replace( rep )
       @left,@right=reg,rep
-      @reg,@rep=reg,rep
+      #@reg,@rep=reg,rep
       super
     end
 
-    attr_reader :left,:right
-    attr_reader :reg,:rep
-
+    attr_accessor :left,:right
+    #attr_reader :reg,:rep
+    alias reg left
+    alias rep right
     alias from left
     alias to right
+    alias from= left=
+    alias to= right=
 
      
     def mmatch(progress)
@@ -93,6 +96,10 @@ module Reg
     def replace(origpos,len,progress)
       Eventually===@rep and huh
       progress.register_replace(origpos,len, @rep) 
+    end
+    
+    def subregs 
+      [@left]
     end
   end
   
