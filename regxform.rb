@@ -1,5 +1,11 @@
 require 'reg'
-require 'regcompiler'
+require 'regcompiler' #but then breaks it!
+
+#use of this file breaks the compiler.
+#only trees are supported. maybe dags if you're lucky.
+#not full graphs.
+#array matchers are not supported currently.
+
 module Reg
   module Reg
     def xform!(datum,changed={})
