@@ -147,6 +147,34 @@ module Reg
       result
     end
   end
+
+  class<<Object
+    alias new__without_nested_nil_replacer_fix new
+    IMMEDIATES=[nil,false,true,0,:symbol,Class]
+    def new *args
+      hash= (::Hash===args.last ? args.pop : {})
+      replacing_immediate,normal={},{}
+      hash.each_pair{|keymtr,valmtr| 
+        if ::Reg::Transform===valmtr and !IMMEDIATES.grep(valmtr).empty? and ::Symbol===keymtr
+          transform=valmtr
+          normal[keymtr]=transform.from
+          replacing_immediate[keymtr]=transform.to
+        else
+          normal[keymtr]=valmtr
+        end
+      }
+      args.push normal
+      result=new__without_nested_nil_replacer_fix(*args)
+      unless replacing_immediate.empty?
+        result=result.finally{|x,session|
+          replacing_immediate.each_pair{|key,to|
+            x.send "#{key}=",to.formula_value(x.send(key),session)
+          }
+        }
+      end
+      return result
+    end
+  end
 end
 
 tests=proc{
