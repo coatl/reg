@@ -213,8 +213,8 @@ module Reg
         incomplete=false
         result=Ron::GraphWalk.breadth_graphcopy(@repldata) {|cntr,o,i,ty,useit|
           useit[0]=true
-          @alwaysdupit.include?(o.__id__) ? o.dup : 
-          newo=case o
+          newo=@alwaysdupit.include?(o.__id__) ? o.dup : 
+          case o
 #          when ItemThatLike,RegThatLike;
 #            o.formula_value(other,session)
           when Formula           #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
