@@ -84,6 +84,7 @@ module Reg
           locals[:$']=$'
           $&.to_a.each_with_index{|br,i| locals[:"$#{i}"]=br }
         end
+        session.each_pair{|name,val| locals[name]=val if ::Symbol===name } #hacky... names shouldn't need to be frozen here
         session[other.__id__]=WithBoundRefValues.new(to,locals)
 
 =begin
