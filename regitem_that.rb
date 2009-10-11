@@ -59,7 +59,7 @@ module Reg
 
     def % name
       super unless Symbol===name
-      Bound.new(self,name)
+      Bound.new(name,self)
     end
 
     
