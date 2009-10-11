@@ -187,9 +187,12 @@ module Reg
       def rebuild_dupset
         cntrstack=[]
         @alwaysdupit=Set[]
+        seen=Set[]
         traverser=proc{|cntr,o,i,ty|
-          
-          cntrstack.push cntr.__id__     if cntr   
+          next if seen.include? o.__id__
+          seen<< o.__id__          
+
+          cntrstack.push cntr.__id__     if cntr
             case o
             when Deferred,Literal; @alwaysdupit|=cntrstack
             end
