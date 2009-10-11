@@ -476,7 +476,7 @@ module Reg
     #---------------------------------------------
     def process_laters
       #i think regular reverse_each will work as well...
-      GraphWalk.recursive_reverse_each(@matchsucceed_stack) {|later| later.call }
+      Ron::GraphWalk.recursive_reverse_each(@matchsucceed_stack) {|later| later.call }
     end
 
 =begin
