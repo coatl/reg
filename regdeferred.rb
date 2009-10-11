@@ -135,7 +135,7 @@ module Reg
           candidates.each{|n| alias_method n[1..-1],n }
           undef method_missing
           include Defanged
-        end if Deferred===x and !Defanged===x
+        end if Deferred===x and not Defanged===x
         return x
       end
     end
