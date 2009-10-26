@@ -1198,7 +1198,7 @@ END2
   
   #--------------------------------------------------------------
   class Transform
-    include HasBmatch
+    #include HasBmatch
     def generate_cmatch
     case match_method @reg
     when "c": huh
