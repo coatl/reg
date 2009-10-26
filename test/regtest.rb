@@ -139,6 +139,10 @@ class TC_Reg
   def test_replacement_construction
     assert_nothing_raised{ Class>>[ (~:op).foo ] }
   end 
+
+  def test_replacement_of_subseq_can_be_constructed
+    assert_nothing_raised{-[Float.-]>>:accept}
+  end
  
   def test_object_matcher 
      #object matcher tests
