@@ -1201,7 +1201,7 @@ END2
     #include HasBmatch
     def generate_cmatch
     case match_method @reg
-    when "c": huh
+    when "c"
          "    origpos=cu.pos\n"+
          "    @reg.cmatch(progress){\n"+
          "    progress.register_replace(origpos,cu.pos-origpos,@rep)\n"+
@@ -1217,8 +1217,8 @@ END2
     def generate_bmatch
     "    origpos=cu.pos\n"+
     case match_method @reg
-    when "c": raise "hell"
-    when "b": 
+    when "c"; raise "hell"
+    when "b" 
     "    @reg.bmatch(progress) and\n"
     else 
     "    cu.skip @reg and\n"
