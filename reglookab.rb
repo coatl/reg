@@ -65,7 +65,7 @@ module Reg
     def itemrange; 0..0 end
     
     def mmatch(pr)
-      pr.huh look at prev item, not next_
+      warn "look at prev item, not next_"
       @reg.mmatch(pr)
       return [true,0]
     end
