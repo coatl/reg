@@ -496,7 +496,7 @@ module Reg
     end
 
     def b_c_match_infection
-      is_a?(HasCmatch) || subregs.find{|reg|HasCmatch===reg} && extend(
+      (is_a?(HasCmatch) || subregs.find{|reg|HasCmatch===reg}) && extend(
 #        unless is_a?(Multiple) 
 #         class<<self; alias generate_bmatch default_generate_bmatch end 
 #             HasBmatch
