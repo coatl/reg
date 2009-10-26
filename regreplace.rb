@@ -238,7 +238,7 @@ module Reg
           when ItemThatLike,RegThatLike
             o.formula_value(gpoint.old_value,progress)
           when Deferred;           huh #if there's any Deferred items in @repldata, evaluate (#formula_value) them now
-            o.formula_value(huh nil,progress)
+            o.formula_value(huh(nil),progress)
           when Literal;  o.unwrap #literal items should be unwrapped
           else useit[0]=false
           end        
