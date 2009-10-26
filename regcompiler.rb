@@ -505,7 +505,7 @@ module Reg
 #        end
       ) or
       subregs.find{|reg|HasBmatch===reg} && extend(HasBmatch)
-      HasBmatch===self and assert(!(HasCmatch===self)) #can't be both at once
+      assert((not (HasCmatch===self)&(HasBmatch===self))) #can't be both at once
     end
     
     def cmatch_and_bound_infection
