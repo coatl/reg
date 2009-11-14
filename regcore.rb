@@ -25,7 +25,7 @@ require 'trace_during.rb'
   Infinity= begin
     result= [ Float::MAX**Float::MAX, Float::MAX**2,  Float::MAX*2].max
     result.infinite? ? result : result=1.0/0
-  rescue: Float::MAX  #maybe 1.0/0 doesn't work on some systems?
+  rescue; Float::MAX  #maybe 1.0/0 doesn't work on some systems?
   end unless defined? Infinity
   
   #there's also this way: 999999999999999999999999999999999999999999999999e999999999999999999999999999999

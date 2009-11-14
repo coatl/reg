@@ -1040,8 +1040,8 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
         @idx >= @orreg.regs.size and return nil
         x=@orreg.regs[@idx].mmatch(@progress) #hard spot
         result=case x
-          when MatchSet: @set=x;x.next_match
-          when Integer: @progress.cursor.readahead( x)
+          when MatchSet; @set=x;x.next_match
+          when Integer; @progress.cursor.readahead( x)
         end
       end
       a=RR[nil]*@orreg.regs.size
@@ -1123,7 +1123,7 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
     def mmatch(pr)
       left=pr.cursor.restsize
       beg=@times.begin
-      if beg==left : [true,left]
+      if beg==left ; [true,left]
       elsif beg<left
         make_ms([left,@times.end].min,beg,pr)
       end
@@ -1137,7 +1137,7 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
     def mmatch(pr)
       left=pr.cursor.restsize
       beg=@times.begin
-      if beg==left : [true,left]
+      if beg==left ; [true,left]
       elsif beg<left
         make_ms([left,@times.end].min,beg,pr)
       end

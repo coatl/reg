@@ -120,8 +120,8 @@ module Reg
       return '' unless $Debug and $RegSlicingEnable
       sltype=Slicing.for(@regs[i])
       case sltype
-      when Slicing::Subseq: pre="sl="
-      when nil: sltype="nil"
+      when Slicing::Subseq; pre="sl="
+      when nil; sltype="nil"
       else sltype=sltype.name.sub(/^Reg::/,'')
       end 
       construct=".new(@regs_#{i})" unless sltype=="nil"
@@ -141,8 +141,8 @@ module Reg
 
     def match_method reg
       case reg
-      when HasBmatch: "b"
-      when HasCmatch: "c"
+      when HasBmatch; "b"
+      when HasCmatch; "c"
       else ""
       end
     end
@@ -774,8 +774,8 @@ module Reg
 
     def matchline andword="and"
       case(method=match_method @reg)
-        when "c": "@reg.cmatch(progress) {"
-        when "b": "@reg.bmatch progress #{andword}"
+        when "c"; "@reg.cmatch(progress) {"
+        when "b"; "@reg.bmatch progress #{andword}"
         else      "cu.skip @reg #{andword}"
       end
     end
@@ -792,9 +792,9 @@ module Reg
           end
           #varying iterations
           case variation=@times.end-@times.begin
-          when 0:
-          when 1: result+=["progress.bt_stop{\n", matchline("or progress.throw\n"), "yield\n", "}\n", "yield\n"]
-          when Infinity: 
+          when 0
+          when 1; result+=["progress.bt_stop{\n", matchline("or progress.throw\n"), "yield\n", "}\n", "yield\n"]
+          when Infinity;
             iterline="count=0.upto(Infinity){|i| \n"
           else
             iterline="count=#{variation}.times{|i| \n"
@@ -936,8 +936,8 @@ END2
       (0...@regs.size).map{|i|
         "    progress.bt_stop{\n"+
         case match_method @regs[i]
-        when "c":        "    @regs_#{i}.cmatch(progress) {yield}\n"
-        when "b":        "    cu.holding?{@regs_#{i}.bmatch(progress)} or progress.throw\n    yield\n"
+        when "c";        "    @regs_#{i}.cmatch(progress) {yield}\n"
+        when "b";        "    cu.holding?{@regs_#{i}.bmatch(progress)} or progress.throw\n    yield\n"
         else             "    cu.skip(@regs_#{i}) or progress.throw\n    yield\n"
         end+
         "    }\n#    progress.bt_backup\n"
@@ -1030,7 +1030,7 @@ END2
 
     def generate_cmatch
       case match_method @reg
-      when "b","c": 
+      when "b","c"; 
       movecmd=@reg.itemrange.last==Infinity ? :begin! : "move(0-[#{@reg.itemrange.last},cu.pos].min)"
      ["    origpos=cu.pos",
       "    cu.pos>=#{@reg.itemrange.first} or progress.throw\n",
@@ -1045,8 +1045,8 @@ END2
     
     def generate_bmatch
       case match_method @reg
-      when "c": raise "hell"
-      when "b": 
+      when "c"; raise "hell"
+      when "b"; 
       movecmd=@reg.itemrange.last==Infinity ? :begin! : "move(0-[#{@reg.itemrange.last},cu.pos].min)"
      ["    origpos=cu.pos",
       "    if cu.pos>=#{@reg.itemrange.first}\n",
@@ -1103,13 +1103,13 @@ END2
 
     def generate_cmatch
     case match_method @reg
-    when "c": 
+    when "c"; 
      ["    origpos=cu.pos\n",
       "    @reg.cmatch(progress) {\n",
       "    progress.register_var(@name,origpos...cu.pos)\n",
       "    yield\n",
       "    }\n"]
-    when "b": 
+    when "b"; 
      ["    origpos=cu.pos\n",
       "    if @reg.bmatch progress\n",
       "    progress.register_var(@name,origpos...cu.pos)\n",
@@ -1129,8 +1129,8 @@ END2
 
     def generate_bmatch
     case match_method @reg
-    when "c": raise "hell"
-    when "b": 
+    when "c"; raise "hell"
+    when "b"; 
      ["    origpos=cu.pos\n",
       "    @reg.bmatch progress and\n",
       "    progress.register_var(@name,origpos...cu.pos)\n"
@@ -1237,7 +1237,7 @@ END2
 #    include HasBmatch
     def generate_cmatch
     case match_method @reg
-    when "c": <<-END
+    when "c"; <<-END
       @reg.cmatch(progress) {
       progress.register_later progress,&@block
       yield
@@ -1255,8 +1255,8 @@ END2
 
     def generate_bmatch 
     case match_method @reg
-    when "c": raise "finally match compile error"
-    when "b": "@reg.bmatch progress" 
+    when "c"; raise "finally match compile error"
+    when "b"; "@reg.bmatch progress" 
     else      "cu.skip @reg"
     end +" and
       (progress.register_later progress,&@block;true)\n"
@@ -1986,8 +1986,8 @@ end
   class Not
     def generate_bmatch
       case match_method @reg
-      when "c": raise "hell"
-      when "b": 
+      when "c"; raise "hell"
+      when "b"; 
            "    cu.holding{ !@reg.bmatch progress }"+
            (" and cu.move(1)" if @reg.itemrange==(1..1)).to_s
       else "    cu.skip self"
@@ -1996,7 +1996,7 @@ end
     
     def generate_cmatch
       case match_method @reg
-      when "c": 
+      when "c"; 
            "    progress.catch(:RegNotFail) {\n"+
            "    progress.#{$bt_catch_method} {\n"+
            "    @reg.cmatch(progress) {progress.throw :RegNotFail}\n"+

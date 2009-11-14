@@ -115,9 +115,9 @@ require 'set'
         l=l.pred if le=exclude_end?
         rl=rl.pred if re=range.exclude_end?
         l,le=*case l<=>rl
-        when -1:  [l,le]
-        when 0:   [l,le&&re]
-        when 1:   [rl,re]
+        when -1;  [l,le]
+        when 0;   [l,le&&re]
+        when 1;   [rl,re]
         else return super
         end
         return ::Range.new([first,range.first].max, l, le)
@@ -254,10 +254,10 @@ module ::Reg
       
       def alphabetic_name(meth)
         @@oplookup[meth] or case meth
-          when /\?$/: :"op_#{meth[0...-1]}_p"
-          when /!$/: :"op_#{meth[0...-1]}_bang"
-          when /=$/: :"op_#{meth[0...-1]}_setter"
-          when /^op_/: :"op_#{meth}"
+          when /\?$/; :"op_#{meth[0...-1]}_p"
+          when /!$/; :"op_#{meth[0...-1]}_bang"
+          when /=$/; :"op_#{meth[0...-1]}_setter"
+          when /^op_/; :"op_#{meth}"
           else meth
         end
       end

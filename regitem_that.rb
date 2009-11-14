@@ -51,7 +51,7 @@ module Reg
     def eeee(val)
       @klass and @klass===val || return
       begin call(val)
-      rescue: false
+      rescue; false
       end
     end
     alias === eeee #does nothing in includers.... why?

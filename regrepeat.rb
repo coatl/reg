@@ -174,7 +174,7 @@ module Reg
     def mmatch(arr,start)
       left=arr.size-start
       beg=@times.begin
-      if beg==left : [arr[start..-1],left]
+      if beg==left ; [arr[start..-1],left]
       elsif beg<left
         SingleRepeatMatchSet.new([left,@times.end].min, -1, beg)
       end
@@ -247,7 +247,7 @@ module Reg
     def mmatch(arr,start)
       left=arr.size-start
       beg=@times.begin
-      if beg==left : [arr[start..-1],left]
+      if beg==left ; [arr[start..-1],left]
       elsif beg<left
         SingleRepeatMatchSet.new(beg, 1, [left,@times.end].min)
       end
