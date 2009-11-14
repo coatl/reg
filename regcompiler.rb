@@ -852,8 +852,8 @@ END2
            "     #{needs_close_brace ? "}"*@times.begin : "progress.throw" }\n"
          ]
         ]
-      end
     end
+  end
   
   #--------------------------------------------------------------
   class ManyClass
@@ -1191,7 +1191,7 @@ END2
              "    cells=formula_value(huh,progress) and \n"+
       "    cells=::Reg::BackrefLike.to_indexed(progress,cells) and \n"+
       "    cu.skip_literals cells\n"
-     end
+    end
     instance_eval(&WrapCmatch)
   end
 

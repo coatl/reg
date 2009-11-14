@@ -35,7 +35,7 @@ for name in OBSOLETE_NAMES do
            end
          end
        endeval
-      else
+     else
        eval <<-endeval
          module ::Reg#{name}; include Reg::#{name}
            def self.included(*args,&block)
@@ -45,7 +45,7 @@ for name in OBSOLETE_NAMES do
          end
        endeval
         
-      end
+     end
              
 #  Object.const_set "Reg"+name, (Reg.const_get name)
 end
