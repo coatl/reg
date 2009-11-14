@@ -130,6 +130,7 @@ module Reg
       def defang!(x)
         class<<x
           ms=instance_methods#.+(private_instance_methods)
+          ms.map!{|m| m.to_s}
           candidates=ms.grep(/\A\#/)
           candidates-=ms.grep(/\A[^\#]/).map{|n| "#"+n}
           candidates.each{|n| alias_method n[1..-1],n }
