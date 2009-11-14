@@ -14,6 +14,6 @@ module Kernel
     @@seenit__[callerid] and return
     @@seenit__[callerid]=1
   
-    warn [callerid,": warning: (",mname,") ",msg].to_s
+    warn [callerid,": warning: (",mname,") ",msg].join
   end  
 end
