@@ -1510,9 +1510,9 @@ end
 if false  #work-around warnings in cursor
 warn "warning: ugly workaround for chatty sequence warnings"
 propNiller=proc do 
-    old_init=instance_method:initialize
+    old_init=instance_method :initialize
     
-    define_method:initialize do|*args|
+    define_method :initialize do|*args|
       @positions||=nil;@prop||=nil    
       old_init.bind(self)[*args]
     end
