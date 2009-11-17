@@ -452,7 +452,7 @@ module Reg
     #---------------------------------------------
     def process_undos(undos=@undos_stack)
       #i think regular reverse_each will work as well...
-      GraphWalk.recursive_reverse_each undos do|undo| 
+      Ron::GraphWalk.recursive_reverse_each undos do|undo| 
         ::Symbol.reg|::String===undo ? @variables[undo].pop : undo.call 
       end
     end
