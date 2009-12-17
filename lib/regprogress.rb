@@ -888,7 +888,7 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
       start=cu.pos
       start+@times.begin <= cu.size or return nil  #enough room left in input?
       i=-1
-      (0...@times.end).each do |i|
+      (0...@times.end).each do |i2| i=i2
         start+i<cu.size or break(i-=1)
         @reg===cu.read1 or break(i-=1)
       end
@@ -1070,7 +1070,7 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
   private
     def mmatch_full(pr)
       pr.newcontext(self)
-      mat=i=nil
+      mat=nil
       assert pos=pr.cursor.pos
       @regs.each_with_index{|r,i|
         if r.respond_to? :mmatch
@@ -1415,7 +1415,7 @@ else #... not $MMATCH_PROGRESS
   class Repeat
     def mmatch(arr,start)
       i=-1
-      (0...@times.end).each do |i|
+      (0...@times.end).each do |i2| i=i2
         start+i<arr.size or break(i-=1)
         @reg===arr[start+i] or break(i-=1)
       end

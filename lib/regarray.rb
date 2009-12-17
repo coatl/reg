@@ -250,7 +250,7 @@ module Reg
 
   private
     def mmatch_full(arr,start)
-      mat=i=nil
+      mat=nil
       @regs.each_with_index{|r,i|
         if r.respond_to? :mmatch
           mat=r.mmatch(arr,start) or next

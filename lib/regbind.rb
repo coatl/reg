@@ -152,9 +152,9 @@ module Reg
     include Reg,Composite
   
     def initialize(reg,&block)
-      block||=proc{|reg,other,result|
+      block||=proc{|reg2,other,result|
         print "not " unless result
-        print reg.inspect, " === ", other.inspect, "\n"
+        print reg2.inspect, " === ", other.inspect, "\n"
       } 
       @reg,@block=reg,block
       super

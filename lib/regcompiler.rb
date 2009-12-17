@@ -332,7 +332,6 @@ module Reg
 
     #---------------------------------------------
     def on_throw(event,*onfail)
-      catcher=nil
       @catchers.reverse_each{|catcher| 
         if catcher.first==event 
           catcher.last.push(*onfail) 

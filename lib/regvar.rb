@@ -27,11 +27,11 @@ module Reg
     
     case regx
     when Repeat; "("+minlen_formula(regx.reg(x), session )+")*"+regx.range.first.to_s
-    when Subseq; regx.regs.map{|x| minlen_formula(x, session) }.join'+'
+    when Subseq; regx.regs.map{|r| minlen_formula(r, session) }.join'+'
     when Variable; minlen_formula(regx.lit,session)
     when LookAhead,LookBehind; '0'
-    when And;    "[#{regx.regs.map{|x| minlen_formula(x, session) }.join', '}].max"
-    when Or,Xor; "[#{regx.regs.map{|x| minlen_formula(x, session) }.join', '}].min"
+    when And;    "[#{regx.regs.map{|r| minlen_formula(r, session) }.join', '}].max"
+    when Or,Xor; "[#{regx.regs.map{|r| minlen_formula(r, session) }.join', '}].min"
     when Not; (regx.reg.itemrange==(1..1)) ? 1 : 0
     when Many; '0'
     else '1'
@@ -47,11 +47,11 @@ module Reg
     
     case regx
     when Repeat; "("+maxlen_formula(regx.reg(x), session )+")*"+regx.range.last.to_s
-    when Subseq; regx.regs.map{|x| maxlen_formula(x, session) }.join'+'
+    when Subseq; regx.regs.map{|r| maxlen_formula(r, session) }.join'+'
     when Variable; maxlen_formula(regx.lit,session)
     when LookAhead,LookBehind; '0'
-    when And;    "[#{regx.regs.map{|x| maxlen_formula(x, session) }.join', '}].max"
-    when Or,Xor; "[#{regx.regs.map{|x| maxlen_formula(x, session) }.join', '}].max"
+    when And;    "[#{regx.regs.map{|r| maxlen_formula(r, session) }.join', '}].max"
+    when Or,Xor; "[#{regx.regs.map{|r| maxlen_formula(r, session) }.join', '}].max"
     when Not; (regx.reg.itemrange==(1..1)) ? 1 : 0
     when Many; 'Infinity'
     else '1'
