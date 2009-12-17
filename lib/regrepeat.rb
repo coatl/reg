@@ -54,7 +54,7 @@ module Reg
             Infinity
           else
             rl*tl
-           end
+          end
     ensure
       list.delete __id__ if list
     end

@@ -876,7 +876,7 @@ if defined? $MMATCH_PROGRESS  #ultimately, mmatch will take a progress, but unti
       assert start==pr.cursor.pos
       pr.endcontext      
     end
-   end
+  end
 
   #---------------------------------------------
   class Repeat
