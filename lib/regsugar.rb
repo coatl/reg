@@ -329,6 +329,9 @@ Any=::Reg::Any if defined? ::Reg::Any
 Many=::Reg::Many if defined? ::Reg::Many
 None=::Reg::None if defined? ::Reg::None
 
+def _; ::Reg::Any end
+def __; ::Reg::Many end
+
 #older names... to be obsoleted someday?
 OB=::Reg::OB if defined? ::Reg::OB
 OBS=::Reg::OBS if defined? ::Reg::OBS
