@@ -26,7 +26,29 @@ global namespace. it's optional, but highly recommended.
 
 require 'set'
 
-
+#if run within irb, disable irb's definition of _
+if defined? IRB
+  warn "loading reg within irb; irb's definition of _ disabled"
+  module IRB
+    class Context
+      def set_last_value(value)
+        @last_value = value
+        #@workspace.evaluate self, "_ = IRB.CurrentContext.last_value"
+      end
+    end
+    fail unless defined? WorkSpace
+    class WorkSpace
+      alias initialize_with_underscore_lvar initialize
+      def initialize(*main)
+        initialize_with_underscore_lvar(*main)
+        @binding=eval("def irb_binding; binding; end; irb_binding",TOPLEVEL_BINDING,__FILE__, __LINE__)
+      end
+    end
+  end
+  IRB.CurrentContext.workspace.instance_variable_set(:@binding,
+    eval("def irb_binding; binding; end; irb_binding",TOPLEVEL_BINDING,__FILE__, __LINE__)
+  ) if IRB.CurrentContext
+end
 
 #tla sugar moved into the related files plus central stuff in regcore.rb
 #(maybe the regcore stuff can move here?,,, but sugar is supposed to be optional...\
