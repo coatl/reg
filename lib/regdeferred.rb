@@ -53,7 +53,7 @@ module Reg
         ms.each { |m| 
           next if m=="initialize"
           alias_method "##{m}", m #archive m
-          undef_method m unless m =~ /^__/ || m=='instance_eval'
+          undef_method m unless m =~ /^__/ || m=='instance_eval' || m==:instance_eval
         }
         extend BlankSlate::ClassMethods      
       }
