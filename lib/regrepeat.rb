@@ -111,7 +111,7 @@ module Reg
 
     def ===(other); false; end
     def matches_class; self; end
-    def inspect; "~OB" end  #hmmmm...
+    def inspect; "~_" end  #hmmmm...
   end
 
 
@@ -142,7 +142,7 @@ module Reg
 
     def ===(other); true;end
     def matches_class; ::Object end
-    def inspect; "OB" end    #hmmmm...
+    def inspect; "_" end    #hmmmm...
   end
 
 
@@ -185,7 +185,7 @@ module Reg
     def inspect
       if @times.end.to_f.infinite?
         if @times.begin.zero?
-          "Many"
+          "__"
         else
           "(Any+#{@times.begin})"
         end

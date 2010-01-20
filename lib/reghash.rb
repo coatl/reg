@@ -89,7 +89,7 @@ module Reg
       result=[]
       result<<@literals.inspect[1..-2] unless @literals.empty?
       result<<@matchers.inspect[1..-2] unless @matchers.empty?
-      result<<"OB=>#{@others.inspect}"  if defined? @others and @others!=nil
+      result<<"_=>#{@others.inspect}"  if defined? @others and @others!=nil
       Thread.current[name]=nil
       return "+{#{result.join(", ")}}"
     end
