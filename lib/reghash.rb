@@ -59,6 +59,13 @@ module Reg
     def self.[](*args); new(*args); end
 
     def matches_class; ::Hash end
+
+    def loose
+      result=clone
+      result.instance_variable_set(:@others,OB)
+      result
+    end
+    alias -@ loose
     
     def ordered
       pairs=[]
