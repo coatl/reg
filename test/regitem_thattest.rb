@@ -24,11 +24,11 @@ require 'test/unit'
       res=pristine_inspect
       res[/^#</] or return res
       res=["#<",self.class,": ",instance_variables.sort.collect{|v| 
-        [v,"=",instance_variable_get(v).inspect," "]
+        [v,"=",instance_variable_get(v).inspect," "].join
       }]
-      res.last.pop
+      #res.last.last.chop!
       res.push('>')
-      res.to_s
+      res.join
     end
   end
   class T411 < Test::Unit::TestCase
