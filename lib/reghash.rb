@@ -50,6 +50,12 @@ module Reg
       super
     end
 
+    def initialize_copy(other)
+      @matchers,@literals=*other.instance_eval{[@matchers,@literals]}.map{|x| x.clone }
+      @others=other.instance_eval{@others}
+      @others=@others.clone if @others
+    end
+
     def self.[](*args); new(*args); end
 
     def matches_class; ::Hash end
