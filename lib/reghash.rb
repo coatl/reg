@@ -355,9 +355,12 @@ module Reg
       Thread.current[name] and return '+[...**...]'
       Thread.current[name]=true
       result="+[#{
-        map{|k,v| k.inspect+ ((Reg===k)? "" : ".reg") +
-                    "**"+v.inspect unless OB==k && nil==v
-        }.compact.join ", "
+        str=''
+        each_pair{|k,v| 
+          str<< k.inspect+ ((Reg===k)? "" : ".reg") +
+                "**"+v.inspect+", " unless OB==k && nil==v
+        }
+        str
       }]"
       Thread.current[name]=nil
       result
@@ -368,13 +371,13 @@ module Reg
       result
     end
     
-    def each
+    def each_pair
       @keys.each_index{|i|
         yield @keys[i],@vals[i]
       }
       yield OB,@others
     end
-    include Enumerable
+#    include Enumerable
     
     
     def to_ruby
