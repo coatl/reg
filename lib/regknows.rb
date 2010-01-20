@@ -22,7 +22,6 @@ module Reg
     attr :sym
     def initialize(sym) 
       @sym=sym 
-      super
     end
   
     def === (obj)
