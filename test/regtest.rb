@@ -107,9 +107,9 @@ class TC_Reg
     product=1
     nestlevel.times { 
       op=case rand(3)
-           when 0: :*
-           when 1: :+
-           when 2: :-
+           when 0; :*
+           when 1; :+
+           when 2; :-
          end
       num=rand(6)+1
       product*=num
@@ -928,7 +928,7 @@ $RegTraceEnable=1 #debugging zone:
      assert_ene( +[Set[1,2,3]], [4] )
      
      assert case Set[1,2,3]
-            when Set[1,2,3]: true
+            when Set[1,2,3]; true
             end
             
      assert [Set[1,2,3]].grep Set[1,2,3]
@@ -2067,7 +2067,7 @@ end
       left===right,
       message+" left=#{left.inspect}  right=#{right.inspect}"
     )
-    if ENV['NO_TEST_UNIT']: print ".";$stdout.flush end
+    if ENV['NO_TEST_UNIT']; print ".";$stdout.flush end
   end
 
   def assert_ene(left,right,message='assert_ene failed')
@@ -2075,7 +2075,7 @@ end
      !(left===right),
      message+" left=#{left.inspect}  right=#{right.inspect}"
     )
-    if ENV['NO_TEST_UNIT']: print ",";$stdout.flush end
+    if ENV['NO_TEST_UNIT']; print ",";$stdout.flush end
   end
 
   def check_matcher(mtrs, hash)
