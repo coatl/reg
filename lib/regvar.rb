@@ -108,14 +108,14 @@ module Reg
               end
             end
           "
-        }.to_s+
+        }.join+
         [ :subregs,:to_h].map {|name|
           "
             def #{name}(*a,&b)
               @o.#{name}(*a,&b)
             end
           "
-        }.to_s
+        }.join
         
         alias_method :cmatch, :cmatch_jit_compiler if instance_methods.include? "cmatch"
         alias_method :bmatch, :bmatch_jit_compiler if instance_methods.include? "bmatch"

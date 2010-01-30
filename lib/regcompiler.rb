@@ -33,23 +33,23 @@ module Reg
           $EnableSlicings && [
             "outer_attempt=progress.match_attempt_starting(self)\n",
             "progress.on_throw(:RegMatchFail,  [:match_attempt_fail, outer_attempt])\n"
-          ],
+          ].join,
           "progress.startcontext(self,(#{make_new_cursor} rescue progress.throw))\n", 
-        ],
+        ].join,
         "cu=progress.cursor\n",
         $EnableSlicings && ["attempt=progress.match_attempt_starting(self)\n",
            "progress.on_throw(:RegMatchFail, [:match_attempt_fail, attempt])\n"
-        ],
-        generate_cmatch.to_s.gsub( 
+        ].join,
+        generate_cmatch.gsub( 
            /\byield\b/, [
              $EnableSlicings && "progress.match_attempt_success(attempt,:subitemrange)\n",      
              make_new_cursor && "progress.endcontext\n",
              $EnableSlicings && make_new_cursor && "progress.match_attempt_success(outer_attempt)\n",
              "yield\n"
-           ].to_s
+           ].join
         ),
         "end\n"
-      ].to_s.gsub(/^\s*\n/m, '').gsub(/^\s*/, "    ").gsub(/^\s*(un)?def\s/, "  \\1def ")
+      ].join.gsub(/^\s*\n/m, '').gsub(/^\s*/, "    ").gsub(/^\s*(un)?def\s/, "  \\1def ")
     end
 
     def gen_bmatch
@@ -606,15 +606,13 @@ module Reg
     end
     
     def generate_cmatch
-      [(defined? DEBUGGER__ or defined? Debugger)&&"    Process.kill('INT',0) if  @condition===other\n",
+      ((defined? DEBUGGER__ or defined? Debugger)&&"    Process.kill('INT',0) if  @condition===other\n").to_s+
        "    @reg.cmatch(progress) {yield}\n"
-      ]
     end
     
     def generate_bmatch
-      [(defined? DEBUGGER__ or defined? Debugger)&&"    Process.kill('INT',0) if  @condition===other\n",
+      ((defined? DEBUGGER__ or defined? Debugger)&&"    Process.kill('INT',0) if  @condition===other\n").to_s+
        "    @reg.bmatch(progress)\n"
-      ]
     end
     
     if defined? DEBUGGER__ or defined? Debugger
@@ -655,14 +653,14 @@ module Reg
         explode_regs(regs)
 
         braces=0
-        generate_matchlines(regs,"or progress.throw") {
+        result=generate_matchlines(regs,"or progress.throw") {
             braces+=1
         } + [block_given??yield : nil,
              #"p :arr_subseq_preyield\n",
              "    #{preyield} yield\n",
              "    #{'}'*braces}\n",
             ]
-      
+        result.join
       end
     end
     
@@ -673,7 +671,7 @@ module Reg
         "origpos=cu.pos\nbegin\n"+
         generate_matchlines(regs){
           raise "no cmatches here!"
-        }.to_s.sub(/ and *\n$/m, "\n")+
+        }.join.sub(/ and *\n$/m, "\n")+
         presucceed+
         "end or (cu.pos=origpos;nil)\n"
       end
@@ -762,12 +760,12 @@ module Reg
       assert @times.begin==@times.end
       @times.begin.zero? and return ["true\n"]
       
-      ["origpos=cu.pos\n"] + 
+      "origpos=cu.pos\n" + 
       if @times.begin<=4
-        [matchline,"\n"]*@times.begin.-(1) +
-        [matchline(' or (cu.pos=origpos;nil)'),"\n"]
+        (matchline+"\n")*@times.begin.-(1) +
+        matchline(' or (cu.pos=origpos;nil)')+"\n"
       else
-        ["#{@times.begin}.times{ ",matchline(' or break(cu.pos=origpos)')," }\n"]      
+        "#{@times.begin}.times{ "+matchline(' or break(cu.pos=origpos)')+" }\n"
       end
     end
 
@@ -810,7 +808,7 @@ module Reg
             "}\n",
             "}\n"
             ]
-          return result
+          return result.join
           
         end
     
@@ -843,14 +841,14 @@ END2
         [recursive_proc && 
            ["    rest2=proc{\n", 
             count&&"    progress.catch(:RegRepeatEnd){\n",
-            optional_iterations, 
+            optional_iterations.join, 
             count&&"    }\n",
-            "    }\n"],
-         [ [matchline('or progress.throw')+"\n"]*@times.begin,
+            "    }\n"].join,
+         [ (matchline('or progress.throw')+"\n")*@times.begin,
            recursive_proc ? "    rest2[]\n" : optional_iterations, 
            "     #{needs_close_brace ? "}"*@times.begin : "progress.throw" }\n"
-         ]
-        ]
+         ].join
+        ].join
     end
   end
   
@@ -940,7 +938,7 @@ END2
         else             "    cu.skip(@regs_#{i}) or progress.throw\n    yield\n"
         end+
         "    }\n#    progress.bt_backup\n"
-      }.to_s+
+      }.join+
       "    progress.throw\n"
     end
   end
@@ -963,7 +961,7 @@ END2
     CALLCOUNT="a"
     def cmatch_lines(r,onsuccess="yield")
     CALLCOUNT.succ!
-    ["
+    result=["
     origpos=cu.pos
     failevent='RegXorFail_#{CALLCOUNT}'
     progress.catch(failevent) {
@@ -981,6 +979,7 @@ END2
     }
     END
     end+["\n}\n"]
+    result.join
     end
 
     def generate_cmatch
@@ -1034,7 +1033,7 @@ END2
      ["    origpos=cu.pos",
       "    cu.pos>=#{@reg.itemrange.first} or progress.throw\n",
       "    fudge=cu.#{movecmd}-#{@reg.itemrange.first}\n",
-      "    regs_ary(origpos,fudge).-@.cmatch(progress) {yield}\n"] #not inlineable?
+      "    regs_ary(origpos,fudge).-@.cmatch(progress) {yield}\n"].join #not inlineable?
       else
       need0poscheck="cu.pos.nonzero?() &&" if @reg===nil
       "    #{need0poscheck} cu.checkback(@reg) or progress.throw\n"+
@@ -1051,7 +1050,7 @@ END2
       "    if cu.pos>=#{@reg.itemrange.first}\n",
       "    fudge=cu.#{movecmd}-#{@reg.itemrange.first}\n",
       "    regs_ary(origpos,fudge).-@.bmatch(progress)\n",
-      "    end\n"] #not inlineable?
+      "    end\n"].join #not inlineable?
       else
       need0poscheck="cu.pos.nonzero?() &&" if @reg===nil
       "    #{need0poscheck} cu.checkback(@reg)\n"
@@ -1107,14 +1106,14 @@ END2
       "    @reg.cmatch(progress) {\n",
       "    progress.register_var(@name,origpos...cu.pos)\n",
       "    yield\n",
-      "    }\n"]
+      "    }\n"].join
     when "b"; 
      ["    origpos=cu.pos\n",
       "    if @reg.bmatch progress\n",
       "    progress.register_var(@name,origpos...cu.pos)\n",
       "    yield\n",
       "    end\n",
-      "    progress.throw\n"]
+      "    progress.throw\n"].join
     else
      ["    progress.register_var(@name,cu.pos)\n",
       "    if (cu.skip @reg)\n",
@@ -1122,7 +1121,7 @@ END2
       "    else\n",
       "      progress.unregister_var @name\n",
       "      progress.throw\n",
-      "    end\n"]
+      "    end\n"].join
     end
     end
 
@@ -1133,12 +1132,12 @@ END2
      ["    origpos=cu.pos\n",
       "    @reg.bmatch progress and\n",
       "    progress.register_var(@name,origpos...cu.pos)\n"
-      ]
+      ].join
     else
      ["    progress.register_var(@name,cu.pos)\n",
       "    (cu.skip @reg) or\n",
       "      progress.unregister_var @name\n"
-      ]
+      ].join
     end
     end
   end
@@ -1375,7 +1374,7 @@ END2
                "    @regs_#{i}.bmatch(progress) and \n"
           else "    @regs_#{i}===actual[#{i}] and \n"
           end
-        }+
+        }.join+
         "    progress.cursor.move 1\n"+
         "    end\n"
       end
@@ -1397,7 +1396,7 @@ END2
                "    @regs_#{i}.bmatch(progress) and \n"
           else "    @regs_#{i}===actual[#{i}] and \n"
           end
-        }+
+        }.join+
         "    progress.cursor.move(1).nonzero? and yield\n"+
         "    #{%/}/*braces}\n"+
         "    end\n"+
@@ -1779,7 +1778,7 @@ if false
         instance_variable_set("@literals_val_#{i}",matval)
         "    progress.with_context(GraphPoint::HashValue,@matchers_key_#{i})\n"+
         "    "+(literals_val_match_code i, matval, "or progress.throw\n")
-      }+
+      }.join+
       "    (other.keys-@literals.map{|(key,val)| key }).each{|okey|\n"+
       "    matchersrest.call 0 {\n"+  #attempt 
       huh+ #finish unmatched keys, 
@@ -1820,7 +1819,7 @@ if false
         
         "    progress.with_context(GraphPoint::HashValue,@literals_key_#{i}) && \n"+
         "    "+literals_val_match_code(i, matval)
-      }.to_s.sub(/ and *\n$/,"\n")+
+      }.join.sub(/ and *\n$/,"\n")+
       "    (other.keys-@literals.keys).each{|okey|\n"+
       @matchers.to_a.map{|(matkey,matval)|
         j+=1
@@ -1835,7 +1834,7 @@ if false
         "    unseenmatchers.delete @matchers_val_#{j}\n"+
         "    next\n"+
         "    end\n"
-      }.to_s+
+      }.join+
       huh+ #default processing
       "huh.with_context"+
       "    "+catchall_val_match_code+" or return\n"+  huh("cant return in bmatch")+
