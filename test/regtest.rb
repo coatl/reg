@@ -748,9 +748,9 @@ end
     10.times {  assert_eee( +[-[]&1], [1] )  }
     10.times { 
      assert_eee( +[1.reg&1], [1] ) 
-     assert_eee( +[1.reg.-.&1], [1] ) 
-     assert_eee( +[1.reg.*.&1], [1] ) 
-     assert_eee( +[1.reg.+.&1], [1] ) 
+     assert_eee( +[1.reg.-.&(1)], [1] ) 
+     assert_eee( +[1.reg.*.&(1)], [1] ) 
+     assert_eee( +[1.reg.+.&(1)], [1] ) 
      assert_eee( +[OB&1], [1] ) 
      assert_eee( +[OBS&1], [1] ) 
      assert_eee( +[OBS&1], [1,1] ) 
