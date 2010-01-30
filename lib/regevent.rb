@@ -20,6 +20,7 @@ module Reg
     include Reg
     def initialize name
       @name=name
+      @name=@name.to_sym
     end
     
     def === other
@@ -31,6 +32,7 @@ module Reg
     include Reg
     def initialize reg,name,result=false
       @reg,@name,@result=reg,name,result
+      @name=@name.to_sym
     end
     
     def === other
