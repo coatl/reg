@@ -533,7 +533,7 @@ module Reg
     def explode_regs(regs=@regs)
         instance_eval((0...regs.size).map{|i|
           "@regs_#{i}"
-        }.join(',')+"=*regs\n") unless regs.empty?
+        }.join(',')+",* = *regs\n") unless regs.empty?
     end
   end
   #--------------------------------------------------------------
