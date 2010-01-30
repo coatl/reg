@@ -411,9 +411,9 @@ end
        begin
         list=Thread.current[:$Reg__Subseq__subitemranges_in_progress]||={}
         id=__id__
-        list[id] and throw(id.to_s,0..Infinity)
+        list[id] and throw(id.to_s.to_sym,0..Infinity)
         list[id]=1
-        catch(id.to_s){
+        catch(id.to_s.to_sym){
         @regs.inject(0){|sum,ob| sum+(Reg===ob ? ob.itemrange.begin : 1) } .. 
           @regs.inject(0){|sum,ob| sum+(Reg===ob ? ob.itemrange.end : 1) }
         }
