@@ -336,7 +336,8 @@ todo:
     -@progress or the @context of that MatchSet? 
     inspect all uses of position_stack and position_inc_stack for similar problems
     
-    
+
+array_like/hash_like/object_like as aliases for +[]/+{}/-{}    
 why isn't ArrayGraphPoint ever used? it should be.
 === sometimes can raise an exception! (eg: ("r".."s")===[])
 -make sure all calls to === are protected by appending 'rescue false' to them.
