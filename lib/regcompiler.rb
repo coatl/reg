@@ -870,7 +870,7 @@ END2
                "cu.rest_size"
              else  
                "[#{@times.end},cu.rest_size].min"
-             end +".downto(#{@times.begin}){|i|\n"
+             end + ".downto(#{@times.begin}){|i|\n"
       code+=<<-END
       progress.bt_stop{
 
@@ -906,9 +906,9 @@ END2
         code+="    #{@times.begin}.upto("
         code+=if @times.end==Infinity
                  "cu.rest_size"
-               else  
+              else  
                  "[#{@times.end},cu.rest_size].min"
-               end +"){|i|\n"
+              end + "){|i|\n"
         code+=<<-END
       progress.bt_stop{
         cu.move i
@@ -1256,7 +1256,7 @@ END2
     when "c"; raise "finally match compile error"
     when "b"; "@reg.bmatch progress" 
     else      "cu.skip @reg"
-    end +" and
+    end + " and
       (progress.register_later progress,&@block;true)\n"
     end
   end
@@ -2217,7 +2217,7 @@ end
       when HasBmatch; reg.bmatch(progress) and yield
       else progress.cursor.skip reg and yield
       end
-      p -1
+      p( -1 )
       progress.throw
     end
     

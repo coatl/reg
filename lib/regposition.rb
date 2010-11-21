@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 =end
 require 'set'
-require 'reg'
+#require 'reg'
 module Reg
   class Position
     include ::Reg::Reg

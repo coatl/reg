@@ -42,7 +42,7 @@ module Reg
     end
     
     def mmatch(progress)
-      progress.register_later progress &@block #shouldn't this be after mmatch?
+      progress.register_later progress(&@block) #shouldn't this be after mmatch?
       
       @reg.mmatch progress
     end
