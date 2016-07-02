@@ -573,6 +573,26 @@ module Reg
     
     
   end
+ 
+  class ::Array
+    #pairing operator
+    def **(other)
+      Pair[self,other]
+    end
+  end
+  class ::String
+    #pairing operator
+    def **(other)
+      Pair[self,other]
+    end
+  end
+  class ::Symbol
+    #pairing operator
+    def **(other)
+      Pair[self,other]
+    end
+  end
+
 
   class Pair
     include Reg
