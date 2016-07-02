@@ -1,6 +1,7 @@
-#$:<< File.dirname(__FILE__)
+$:.push File.expand_path(__FILE__+"/../..") 
 require 'test/test_reg'
 require 'test/regitem_thattest'
+$:.pop
 
 class Array
 
