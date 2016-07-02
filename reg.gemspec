@@ -13,7 +13,8 @@ Gem::Specification.new do |s|
   s.date = Time.now.strftime("%Y-%m-%d")
   s.email = %q{caleb (at) inforadical (dot) net}
   s.extra_rdoc_files = ["README", "COPYING"]
-  s.files = `git ls-files`.split
+  s.files = `git ls-files`.split-['Rakefile']
+  s.files.reject!{|fn| %r{^ramblings/}===fn }
   s.has_rdoc = true
   s.homepage = %{http://github.com/coatl/reg}
   s.rdoc_options = %w[--main README]
