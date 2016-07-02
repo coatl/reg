@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.test_files = %w[test/test_all.rb]
   s.summary = "Reg is a library for pattern matching in ruby data structures."
   s.description = Reg::Description
+  s.license = 'LGPL-2.1'
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
