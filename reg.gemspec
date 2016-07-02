@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
-
-require "#{File.dirname(__FILE__)}/lib/reg/version"
-Reg::Description=open("README"){|f| f.read[/\A.*?\n\n.*?\n\n/m] }
-Reg::Latest_changes="###"+open("History.txt"){|f| f.read[/\A===(.*?)(?====)/m,1] }
+dir=File.dirname(__FILE__)
+require "#{dir}/lib/reg/version"
+Reg::Description=open("#{dir}/README"){|f| f.read[/\A.*?\n\n.*?\n\n/m] } #customized
+Reg::Latest_changes="###"+open("#{dir}/History.txt"){|f| f.read[/\A===(.*?)(?====)/m,1] }
 
 Gem::Specification.new do |s|
   s.name = "reg"
