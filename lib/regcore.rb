@@ -85,6 +85,11 @@ module Reg  #namespace
       pp pristine_inspect
     end
 
+    #--------------------------
+    def to_s
+      inspect
+    end
+
 
     #--------------------------
     #makes a Reg object literal (aliased to +@ by default)
