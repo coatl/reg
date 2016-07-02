@@ -1,5 +1,14 @@
-=== 0.5.0 / 12jan2010
-* none yet
+=== 0.5.0a0 / 15jun2016
+new much faster backtracking engine (turns patterns into equivalent ruby to eval)
+but hash matchers in new engine are currently broken in some cases
+beginnings of search-and-replace (but this doesn't work yet)
+ported to ruby 1.9+
+_ and __ are new preferred names for OB and OBS 
+use something more like standard project structure
+taking a stab at backreference-like functionality
+support for utilities like inspect, hash, marshal
+trace operator for debugging
 
 === 0.4.8 / 21dec2009
-* none either
+* Last stable release
+
