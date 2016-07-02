@@ -433,7 +433,7 @@ module Reg
       result=  "-{#{
           [@vars,@meths,@var_matchers,@meth_matchers].map{|h| 
             h.inspect[1..-2]+", "
-          }}}"
+          }.join('')}}"
       Thread.current[name]=nil
       result
     end
