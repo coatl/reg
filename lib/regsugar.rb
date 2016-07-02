@@ -93,7 +93,12 @@ end
         ::Reg::BoundRef.new(self)
       end
     end
-    #i'd like to take String#-@ and #** too...
+    class String
+      def -@
+        #item_that.respond_to?(self).reg
+        ::Reg::Knows.new(self)
+      end
+    end      
     
     
     class Regexp
