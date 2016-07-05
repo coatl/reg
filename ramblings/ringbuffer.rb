@@ -3,7 +3,7 @@
 #			by Caleb Clausen <reg-owner _at_ inforadical _dot_ net>
 #			based on code by Yukihiro Matsumoto <matz@netlab.co.jp>
 #
-# Copyright (C) 2006  Caleb Clausen
+# Copyright (C) 2006, 2016  Caleb Clausen
 # Copyright (C) 2001  Yukihiro Matsumoto
 # Copyright (C) 2000  Network Applied Communication Laboratory, Inc.
 # Copyright (C) 2000  Information-technology Promotion Agency, Japan

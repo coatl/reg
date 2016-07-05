@@ -1,7 +1,7 @@
 
 =begin copyright
     reg - the ruby extended grammar
-    Copyright (C) 2005  Caleb Clausen
+    Copyright (C) 2005, 2016  Caleb Clausen
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
